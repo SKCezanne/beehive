@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Hive - The Hive of Buzzing Events</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="top-bar">
+        <div class="nav-container">
+            <div class="logo">🐝 Event Hive</div>
+            <div class="nav-right">
+                <div class="notification-container">
+                    <button class="notification-btn" onclick="toggleNotifications()">🔔</button>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">Notifications</div>
+                        <div class="notification-item">
+                            <div class="notification-title">New Event: Dance Competition</div>
+                            <div class="notification-time">2 hours ago</div>
+                        </div>
+                        <div class="notification-item">
+                            <div class="notification-title">Registration Open: Art Exhibition</div>
+                            <div class="notification-time">5 hours ago</div>
+                        </div>
+                        <div class="notification-item">
+                            <div class="notification-title">Reminder: Sports Day Tomorrow</div>
+                            <div class="notification-time">1 day ago</div>
+                        </div>
+                        <div class="notification-item">
+                            <div class="notification-title">Music Festival Tickets Available</div>
+                            <div class="notification-time">2 days ago</div>
+                        </div>
+                    </div>
+                </div>
+                <a href="calendar.html" class="calendar-btn">📅 Event Calendar</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="beehive-bg">
+            <div class="hexagon hex1"></div>
+            <div class="hexagon hex2"></div>
+            <div class="hexagon hex3"></div>
+            <div class="hexagon hex4"></div>
+            <div class="hexagon hex5"></div>
+            <div class="hexagon hex6"></div>
+        </div>
+        <div class="hero-content">
+            <h1 class="main-title">EVENT HIVE</h1>
+            <p class="subtitle">the hive of buzzing events</p>
+        </div>
+        <div class="scroll-indicator">
+            <div class="scroll-arrow">↓</div>
+        </div>
+    </section>
+
+    <!-- Events Section -->
+    <section class="events-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Discover Events</h2>
+                <a href="register.html" class="register-link">Want to register an event? →</a>
+            </div>
+
+            <!-- Filters and Sort -->
+            <div class="controls">
+                <div class="filters">
+                    <span class="filter-label">Filter by Category:</span>
+                    <button class="filter-btn active" data-category="all">All</button>
+                    <button class="filter-btn" data-category="sports">Sports</button>
+                    <button class="filter-btn" data-category="esports">Esports</button>
+                    <button class="filter-btn" data-category="dance">Dance</button>
+                    <button class="filter-btn" data-category="art">Art</button>
+                    <button class="filter-btn" data-category="literature">Literature</button>
+                    <button class="filter-btn" data-category="music">Music</button>
+                </div>
+                <div class="sort">
+                    <span class="sort-label">Sort by:</span>
+                    <select class="sort-select" id="sortSelect">
+                        <option value="date">Date</option>
+                        <option value="price-asc">Price: Low to High</option>
+                        <option value="price-desc">Price: High to Low</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Events Grid -->
+            <div class="events-grid" id="eventsGrid">
+                <!-- Events will be dynamically loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Load events from localStorage
+        function loadEvents() {
+            const events = JSON.parse(localStorage.getItem('events') || '[]');
+            const defaultEvents = [
+                {
+                    id: 1,
+                    name: "Inter-College Dance Battle",
+                    description: "Showcase your dance moves in this electrifying competition. Multiple categories including hip-hop, contemporary, and classical.",
+                    category: "dance",
+                    price: 150,
+                    time: "2024-03-15T18:00",
+                    image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%23FFD700' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='20' fill='%23333'%3EDance Event%3C/text%3E%3C/svg%3E"
+                },
+                {
+                    id: 2,
+                    name: "Cricket Championship",
+                    description: "Annual inter-college cricket tournament. Teams from across the region compete for the championship trophy.",
+                    category: "sports",
+                    price: 200,
+                    time: "2024-03-20T09:00",
+                    image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%23FF6B35' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='20' fill='white'%3ESports Event%3C/text%3E%3C/svg%3E"
+                },
+                {
+                    id: 3,
+                    name: "Art Exhibition: Colors of Spring",
+                    description: "A beautiful showcase of student artwork including paintings, sculptures, and digital art. Open to all art enthusiasts.",
+                    category: "art",
+                    price: 50,
+                    time: "2024-03-18T10:00",
+                    image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%239B59B6' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='20' fill='white'%3EArt Event%3C/text%3E%3C/svg%3E"
+                },
+                {
+                    id: 4,
+                    name: "Gaming Tournament: Valorant",
+                    description: "Compete in this thrilling esports tournament. Prizes for top teams. Registration open for all gaming enthusiasts.",
+                    category: "esports",
+                    price: 100,
+                    time: "2024-03-22T14:00",
+                    image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%231E88E5' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='20' fill='white'%3EEsports Event%3C/text%3E%3C/svg%3E"
+                },
+                {
+                    id: 5,
+                    name: "Poetry Slam Night",
+                    description: "Express yourself through words. An evening of spoken word poetry, open mic, and literary discussions.",
+                    category: "literature",
+                    price: 75,
+                    time: "2024-03-17T19:00",
+                    image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%23E67E22' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='20' fill='white'%3ELiterature Event%3C/text%3E%3C/svg%3E"
+                },
+                {
+                    id: 6,
+                    name: "Music Festival: Spring Beats",
+                    description: "A day-long music festival featuring live bands, solo artists, and DJ sets. Food stalls and merchandise available.",
+                    category: "music",
+                    price: 300,
+                    time: "2024-03-25T16:00",
+                    image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%23E74C3C' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='20' fill='white'%3EMusic Event%3C/text%3E%3C/svg%3E"
+                }
+            ];
+
+            // Merge default events with stored events
+            const allEvents = [...defaultEvents, ...events];
+            displayEvents(allEvents);
+        }
+
+        function displayEvents(events) {
+            const grid = document.getElementById('eventsGrid');
+            const category = document.querySelector('.filter-btn.active')?.dataset.category || 'all';
+            const sortValue = document.getElementById('sortSelect').value;
+
+            // Filter events
+            let filtered = category === 'all' 
+                ? events 
+                : events.filter(e => e.category === category);
+
+            // Sort events
+            filtered.sort((a, b) => {
+                if (sortValue === 'date') {
+                    return new Date(a.time) - new Date(b.time);
+                } else if (sortValue === 'price-asc') {
+                    return a.price - b.price;
+                } else if (sortValue === 'price-desc') {
+                    return b.price - a.price;
+                }
+                return 0;
+            });
+
+            grid.innerHTML = filtered.map(event => `
+                <div class="event-card" data-category="${event.category}">
+                    <div class="event-image">
+                        <img src="${event.image}" alt="${event.name}">
+                    </div>
+                    <div class="event-info">
+                        <h3 class="event-name">${event.name}</h3>
+                        <div class="event-description">
+                            <p>${event.description}</p>
+                        </div>
+                        <div class="event-details">
+                            <span class="event-price">₹${event.price}</span>
+                            <span class="event-time">${formatDateTime(event.time)}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function formatDateTime(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-IN', { 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Filter functionality
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                loadEvents();
+            });
+        });
+
+        // Sort functionality
+        document.getElementById('sortSelect').addEventListener('change', loadEvents);
+
+        // Close notification dropdown when clicking outside
+        window.addEventListener('click', function(e) {
+            if (!e.target.matches('.notification-btn')) {
+                const dropdown = document.getElementById('notificationDropdown');
+                if (dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
+                }
+            }
+        });
+
+        // Load events on page load
+        loadEvents();
+    </script>
+</body>
+</html>

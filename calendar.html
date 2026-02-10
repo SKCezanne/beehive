@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Calendar - Event Hive</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="top-bar">
+        <div class="nav-container">
+            <div class="logo">🐝 Event Hive</div>
+            <div class="nav-right">
+                <div class="notification-container">
+                    <button class="notification-btn" onclick="toggleNotifications()">🔔</button>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">Notifications</div>
+                        <div class="notification-item">
+                            <div class="notification-title">New Event: Dance Competition</div>
+                            <div class="notification-time">2 hours ago</div>
+                        </div>
+                        <div class="notification-item">
+                            <div class="notification-title">Registration Open: Art Exhibition</div>
+                            <div class="notification-time">5 hours ago</div>
+                        </div>
+                    </div>
+                </div>
+                <a href="index.html" class="calendar-btn">🏠 Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="calendar-section">
+        <div class="container">
+            <h1 class="calendar-title">Event Calendar</h1>
+            <div class="calendar-container">
+                <div class="calendar-month">
+                    <div class="month-header">
+                        <h2>March 2024</h2>
+                    </div>
+                    <div class="calendar-grid">
+                        <div class="calendar-day-header">Sun</div>
+                        <div class="calendar-day-header">Mon</div>
+                        <div class="calendar-day-header">Tue</div>
+                        <div class="calendar-day-header">Wed</div>
+                        <div class="calendar-day-header">Thu</div>
+                        <div class="calendar-day-header">Fri</div>
+                        <div class="calendar-day-header">Sat</div>
+                        
+                        <div class="calendar-day"></div>
+                        <div class="calendar-day"></div>
+                        <div class="calendar-day"></div>
+                        <div class="calendar-day"></div>
+                        <div class="calendar-day"></div>
+                        <div class="calendar-day">1</div>
+                        <div class="calendar-day">2</div>
+                        <div class="calendar-day">3</div>
+                        <div class="calendar-day">4</div>
+                        <div class="calendar-day">5</div>
+                        <div class="calendar-day">6</div>
+                        <div class="calendar-day">7</div>
+                        <div class="calendar-day">8</div>
+                        <div class="calendar-day">9</div>
+                        <div class="calendar-day">10</div>
+                        <div class="calendar-day">11</div>
+                        <div class="calendar-day">12</div>
+                        <div class="calendar-day">13</div>
+                        <div class="calendar-day">14</div>
+                        <div class="calendar-day event-day" data-event="Poetry Slam Night - 7:00 PM">15</div>
+                        <div class="calendar-day">16</div>
+                        <div class="calendar-day event-day" data-event="Art Exhibition - 10:00 AM">17</div>
+                        <div class="calendar-day event-day" data-event="Art Exhibition - 10:00 AM">18</div>
+                        <div class="calendar-day">19</div>
+                        <div class="calendar-day event-day" data-event="Cricket Championship - 9:00 AM">20</div>
+                        <div class="calendar-day">21</div>
+                        <div class="calendar-day event-day" data-event="Gaming Tournament - 2:00 PM">22</div>
+                        <div class="calendar-day">23</div>
+                        <div class="calendar-day">24</div>
+                        <div class="calendar-day event-day" data-event="Music Festival - 4:00 PM">25</div>
+                        <div class="calendar-day">26</div>
+                        <div class="calendar-day">27</div>
+                        <div class="calendar-day">28</div>
+                        <div class="calendar-day">29</div>
+                        <div class="calendar-day">30</div>
+                        <div class="calendar-day">31</div>
+                    </div>
+                </div>
+                <div class="calendar-events-list">
+                    <h3>Upcoming Events</h3>
+                    <div class="event-list-item">
+                        <div class="event-date">Mar 15</div>
+                        <div class="event-info-cal">
+                            <div class="event-name-cal">Poetry Slam Night</div>
+                            <div class="event-time-cal">7:00 PM</div>
+                        </div>
+                    </div>
+                    <div class="event-list-item">
+                        <div class="event-date">Mar 17</div>
+                        <div class="event-info-cal">
+                            <div class="event-name-cal">Art Exhibition</div>
+                            <div class="event-time-cal">10:00 AM</div>
+                        </div>
+                    </div>
+                    <div class="event-list-item">
+                        <div class="event-date">Mar 18</div>
+                        <div class="event-info-cal">
+                            <div class="event-name-cal">Art Exhibition</div>
+                            <div class="event-time-cal">10:00 AM</div>
+                        </div>
+                    </div>
+                    <div class="event-list-item">
+                        <div class="event-date">Mar 20</div>
+                        <div class="event-info-cal">
+                            <div class="event-name-cal">Cricket Championship</div>
+                            <div class="event-time-cal">9:00 AM</div>
+                        </div>
+                    </div>
+                    <div class="event-list-item">
+                        <div class="event-date">Mar 22</div>
+                        <div class="event-info-cal">
+                            <div class="event-name-cal">Gaming Tournament</div>
+                            <div class="event-time-cal">2:00 PM</div>
+                        </div>
+                    </div>
+                    <div class="event-list-item">
+                        <div class="event-date">Mar 25</div>
+                        <div class="event-info-cal">
+                            <div class="event-name-cal">Music Festival</div>
+                            <div class="event-time-cal">4:00 PM</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Add hover tooltips for event days
+        document.querySelectorAll('.event-day').forEach(day => {
+            day.addEventListener('mouseenter', function(e) {
+                const tooltip = document.createElement('div');
+                tooltip.className = 'event-tooltip';
+                tooltip.textContent = this.dataset.event;
+                document.body.appendChild(tooltip);
+                
+                const rect = this.getBoundingClientRect();
+                tooltip.style.left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2) + 'px';
+                tooltip.style.top = rect.top - tooltip.offsetHeight - 10 + 'px';
+            });
+            
+            day.addEventListener('mouseleave', function() {
+                const tooltip = document.querySelector('.event-tooltip');
+                if (tooltip) tooltip.remove();
+            });
+        });
+
+        window.addEventListener('click', function(e) {
+            if (!e.target.matches('.notification-btn')) {
+                const dropdown = document.getElementById('notificationDropdown');
+                if (dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

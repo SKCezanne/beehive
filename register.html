@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Event - Event Hive</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="top-bar">
+        <div class="nav-container">
+            <div class="logo">🐝 Event Hive</div>
+            <div class="nav-right">
+                <div class="notification-container">
+                    <button class="notification-btn" onclick="toggleNotifications()">🔔</button>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">Notifications</div>
+                        <div class="notification-item">
+                            <div class="notification-title">New Event: Dance Competition</div>
+                            <div class="notification-time">2 hours ago</div>
+                        </div>
+                    </div>
+                </div>
+                <a href="index.html" class="calendar-btn">🏠 Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="register-section">
+        <div class="container">
+            <div class="register-container">
+                <h1 class="register-title">Register Your Event</h1>
+                <p class="register-subtitle">Join the hive and showcase your event to the community</p>
+                
+                <form class="register-form" id="eventForm" onsubmit="handleSubmit(event)">
+                    <div class="form-group">
+                        <label for="eventName">Event Name *</label>
+                        <input type="text" id="eventName" name="eventName" required placeholder="Enter event name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="eventDescription">Event Description *</label>
+                        <textarea id="eventDescription" name="eventDescription" rows="4" required placeholder="Describe your event..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="eventCategory">Category *</label>
+                            <select id="eventCategory" name="eventCategory" required>
+                                <option value="">Select category</option>
+                                <option value="sports">Sports</option>
+                                <option value="esports">Esports</option>
+                                <option value="dance">Dance</option>
+                                <option value="art">Art</option>
+                                <option value="literature">Literature</option>
+                                <option value="music">Music</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="eventPrice">Price (₹) *</label>
+                            <input type="number" id="eventPrice" name="eventPrice" required min="0" placeholder="0">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="eventDate">Date *</label>
+                            <input type="date" id="eventDate" name="eventDate" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="eventTime">Time *</label>
+                            <input type="time" id="eventTime" name="eventTime" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="eventImage">Event Image URL (optional)</label>
+                        <input type="url" id="eventImage" name="eventImage" placeholder="https://example.com/image.jpg">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="submit-btn">Register Event</button>
+                        <a href="index.html" class="cancel-btn">Cancel</a>
+                    </div>
+                </form>
+
+                <div class="success-message" id="successMessage">
+                    <div class="success-content">
+                        <span class="success-icon">✓</span>
+                        <p>Event registered successfully! Redirecting to home...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        function handleSubmit(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const eventData = {
+                id: Date.now(),
+                name: formData.get('eventName'),
+                description: formData.get('eventDescription'),
+                category: formData.get('eventCategory'),
+                price: parseInt(formData.get('eventPrice')),
+                time: `${formData.get('eventDate')}T${formData.get('eventTime')}`,
+                image: formData.get('eventImage') || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%23FFD700' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='20' fill='%23333'%3E${encodeURIComponent(formData.get('eventName'))}%3C/text%3E%3C/svg%3E`
+            };
+
+            // Get existing events from localStorage
+            const events = JSON.parse(localStorage.getItem('events') || '[]');
+            events.push(eventData);
+            localStorage.setItem('events', JSON.stringify(events));
+
+            // Show success message
+            const successMessage = document.getElementById('successMessage');
+            successMessage.style.display = 'flex';
+
+            // Redirect after 2 seconds
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 2000);
+        }
+
+        // Set minimum date to today
+        document.getElementById('eventDate').min = new Date().toISOString().split('T')[0];
+
+        window.addEventListener('click', function(e) {
+            if (!e.target.matches('.notification-btn')) {
+                const dropdown = document.getElementById('notificationDropdown');
+                if (dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -77,9 +77,20 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="eventImage">Event Image URL (optional)</label>
-                        <input type="url" id="eventImage" name="eventImage" placeholder="https://example.com/image.jpg">
-                    </div>
+  <label>Event Image (optional)</label>
+
+  <div class="image-dropbox" id="imageDrop">
+    <p>📷 Drag & drop an image here<br>or click to upload</p>
+    <input
+      type="file"
+      id="eventImage"
+      accept="image/*"
+      hidden
+    />
+  </div>
+
+  <img id="imagePreview" class="image-preview" />
+</div>
 
                     <div class="form-actions">
                         <button type="submit" class="submit-btn">Register Event</button>
@@ -98,61 +109,119 @@
     </section>
 
     <script>
-        function toggleNotifications() {
-            const dropdown = document.getElementById('notificationDropdown');
-            dropdown.classList.toggle('show');
-        }
+document.addEventListener('DOMContentLoaded', () => {
 
-        const API_BASE = window.location.origin;
+  /* ---------------- Notifications ---------------- */
+  function toggleNotifications() {
+    const dropdown = document.getElementById('notificationDropdown');
+    dropdown.classList.toggle('show');
+  }
+  window.toggleNotifications = toggleNotifications;
 
-        async function handleSubmit(event) {
-            event.preventDefault();
+  window.addEventListener('click', function (e) {
+    if (!e.target.matches('.notification-btn')) {
+      const dropdown = document.getElementById('notificationDropdown');
+      if (dropdown.classList.contains('show')) {
+        dropdown.classList.remove('show');
+      }
+    }
+  });
 
-            const formData = new FormData(event.target);
-            const eventData = {
-                name: formData.get('eventName'),
-                description: formData.get('eventDescription'),
-                category: formData.get('eventCategory'),
-                price: parseInt(formData.get('eventPrice')),
-                time: `${formData.get('eventDate')}T${formData.get('eventTime')}`,
-                image: formData.get('eventImage') || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%23FFD700' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='20' fill='%23333'%3E${encodeURIComponent(formData.get('eventName'))}%3C/text%3E%3C/svg%3E`
-            };
+  /* ---------------- Date min ---------------- */
+  document.getElementById('eventDate').min =
+    new Date().toISOString().split('T')[0];
 
-            const successMessage = document.getElementById('successMessage');
-            const submitBtn = event.target.querySelector('.submit-btn');
+  /* ---------------- Image Drop Box ---------------- */
+  const dropBox = document.getElementById('imageDrop');
+  const fileInput = document.getElementById('eventImage');
+  const preview = document.getElementById('imagePreview');
 
-            try {
-                submitBtn.disabled = true;
-                const res = await fetch(`${API_BASE}/api/events`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(eventData),
-                });
-                if (!res.ok) {
-                    const err = await res.json().catch(() => ({}));
-                    throw new Error(err.error || 'Failed to register event');
-                }
-                successMessage.style.display = 'flex';
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 2000);
-            } catch (err) {
-                alert(err.message || 'Could not connect to server. Make sure the backend is running.');
-                submitBtn.disabled = false;
-            }
-        }
+  dropBox.addEventListener('click', () => fileInput.click());
 
-        // Set minimum date to today
-        document.getElementById('eventDate').min = new Date().toISOString().split('T')[0];
+  dropBox.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropBox.classList.add('dragging');
+  });
 
-        window.addEventListener('click', function(e) {
-            if (!e.target.matches('.notification-btn')) {
-                const dropdown = document.getElementById('notificationDropdown');
-                if (dropdown.classList.contains('show')) {
-                    dropdown.classList.remove('show');
-                }
-            }
-        });
-    </script>
+  dropBox.addEventListener('dragleave', () => {
+    dropBox.classList.remove('dragging');
+  });
+
+  dropBox.addEventListener('drop', e => {
+    e.preventDefault();
+    dropBox.classList.remove('dragging');
+    const file = e.dataTransfer.files[0];
+    if (file) handleImage(file);
+  });
+
+  fileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) handleImage(file);
+  });
+
+  function handleImage(file) {
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      preview.src = reader.result;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+
+    fileInput._file = file;
+  }
+
+  /* ---------------- Form Submit ---------------- */
+  const API_BASE = window.location.origin;
+
+  window.handleSubmit = async function (event) {
+    event.preventDefault();
+
+    const submitBtn = event.target.querySelector('.submit-btn');
+    const successMessage = document.getElementById('successMessage');
+
+    const formData = new FormData();
+    formData.append('name', event.target.eventName.value);
+    formData.append('description', event.target.eventDescription.value);
+    formData.append('category', event.target.eventCategory.value);
+    formData.append('price', event.target.eventPrice.value);
+    formData.append(
+      'time',
+      `${event.target.eventDate.value}T${event.target.eventTime.value}`
+    );
+
+    if (fileInput._file) {
+      formData.append('image', fileInput._file);
+    }
+
+    try {
+      submitBtn.disabled = true;
+
+      const res = await fetch(`${API_BASE}/api/events`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to register event');
+      }
+
+      successMessage.style.display = 'flex';
+      setTimeout(() => (window.location.href = 'index.html'), 2000);
+
+    } catch (err) {
+      alert(err.message);
+      submitBtn.disabled = false;
+    }
+  };
+
+});
+</script>
+
 </body>
 </html>

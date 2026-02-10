@@ -913,3 +913,23 @@ body {
         font-size: 12px;
     }
 }
+.image-dropbox {
+  border: 2px dashed #f5c542;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  background: #fffaf0;
+  transition: 0.2s;
+}
+
+.image-dropbox:hover {
+  background: #fff3c4;
+}
+
+.image-preview {
+  display: none;
+  margin-top: 12px;
+  max-width: 100%;
+  border-radius: 10px;
+}

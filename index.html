@@ -96,69 +96,19 @@
     </section>
 
     <script>
-        // Load events from localStorage
-        function loadEvents() {
-            const events = JSON.parse(localStorage.getItem('events') || '[]');
-            const defaultEvents = [
-                {
-                    id: 1,
-                    name: "Inter-College Dance Battle",
-                    description: "Showcase your dance moves in this electrifying competition. Multiple categories including hip-hop, contemporary, and classical.",
-                    category: "dance",
-                    price: 150,
-                    time: "2024-03-15T18:00",
-                    image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%23FFD700' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='20' fill='%23333'%3EDance Event%3C/text%3E%3C/svg%3E"
-                },
-                {
-                    id: 2,
-                    name: "Cricket Championship",
-                    description: "Annual inter-college cricket tournament. Teams from across the region compete for the championship trophy.",
-                    category: "sports",
-                    price: 200,
-                    time: "2024-03-20T09:00",
-                    image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%23FF6B35' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='20' fill='white'%3ESports Event%3C/text%3E%3C/svg%3E"
-                },
-                {
-                    id: 3,
-                    name: "Art Exhibition: Colors of Spring",
-                    description: "A beautiful showcase of student artwork including paintings, sculptures, and digital art. Open to all art enthusiasts.",
-                    category: "art",
-                    price: 50,
-                    time: "2024-03-18T10:00",
-                    image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%239B59B6' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='20' fill='white'%3EArt Event%3C/text%3E%3C/svg%3E"
-                },
-                {
-                    id: 4,
-                    name: "Gaming Tournament: Valorant",
-                    description: "Compete in this thrilling esports tournament. Prizes for top teams. Registration open for all gaming enthusiasts.",
-                    category: "esports",
-                    price: 100,
-                    time: "2024-03-22T14:00",
-                    image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%231E88E5' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='20' fill='white'%3EEsports Event%3C/text%3E%3C/svg%3E"
-                },
-                {
-                    id: 5,
-                    name: "Poetry Slam Night",
-                    description: "Express yourself through words. An evening of spoken word poetry, open mic, and literary discussions.",
-                    category: "literature",
-                    price: 75,
-                    time: "2024-03-17T19:00",
-                    image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%23E67E22' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='20' fill='white'%3ELiterature Event%3C/text%3E%3C/svg%3E"
-                },
-                {
-                    id: 6,
-                    name: "Music Festival: Spring Beats",
-                    description: "A day-long music festival featuring live bands, solo artists, and DJ sets. Food stalls and merchandise available.",
-                    category: "music",
-                    price: 300,
-                    time: "2024-03-25T16:00",
-                    image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%23E74C3C' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='20' fill='white'%3EMusic Event%3C/text%3E%3C/svg%3E"
-                }
-            ];
+        const API_BASE = window.location.origin;
 
-            // Merge default events with stored events
-            const allEvents = [...defaultEvents, ...events];
-            displayEvents(allEvents);
+        // Load events from MySQL backend (and sync to data/events.json on server)
+        async function loadEvents() {
+            const grid = document.getElementById('eventsGrid');
+            try {
+                const res = await fetch(`${API_BASE}/api/events`);
+                if (!res.ok) throw new Error('Failed to load events');
+                const events = await res.json();
+                displayEvents(events);
+            } catch (err) {
+                grid.innerHTML = '<p class="events-error">Could not load events. Make sure the backend is running at ' + API_BASE + '</p>';
+            }
         }
 
         function displayEvents(events) {

@@ -425,6 +425,15 @@ body {
 }
 
 /* ===== EVENTS GRID ===== */
+.events-error {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-light);
+    background: var(--honey-light);
+    border-radius: 8px;
+}
+
 .events-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));

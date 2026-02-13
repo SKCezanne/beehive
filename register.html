@@ -1,224 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register Event - Event Hive</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register Event - Event Hive</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Top Navigation Bar -->
-    <nav class="top-bar">
-        <div class="nav-container">
-            <div class="logo">🐝 Event Hive</div>
-            <div class="nav-right">
-                <div class="notification-container">
-                    <button class="notification-btn" onclick="toggleNotifications()">🔔</button>
-                    <div class="notification-dropdown" id="notificationDropdown">
-                        <div class="notification-header">Notifications</div>
-                        <div class="notification-item">
-                            <div class="notification-title">New Event: Dance Competition</div>
-                            <div class="notification-time">2 hours ago</div>
-                        </div>
-                    </div>
-                </div>
-                <a href="index.html" class="calendar-btn">🏠 Home</a>
-            </div>
+
+<nav class="top-bar">
+  <div class="nav-container">
+    <div class="logo">🐝 Event Hive</div>
+    <a href="index.html" class="calendar-btn">🏠 Home</a>
+  </div>
+</nav>
+
+<section class="register-section">
+  <div class="container">
+    <div class="register-container">
+
+      <h1>Register Your Event</h1>
+
+      <form id="eventForm" enctype="multipart/form-data">
+
+        <div class="form-group">
+          <label>Event Name *</label>
+          <input type="text" name="name" required>
         </div>
-    </nav>
 
-    <section class="register-section">
-        <div class="container">
-            <div class="register-container">
-                <h1 class="register-title">Register Your Event</h1>
-                <p class="register-subtitle">Join the hive and showcase your event to the community</p>
-                
-                <form class="register-form" id="eventForm" onsubmit="handleSubmit(event)">
-                    <div class="form-group">
-                        <label for="eventName">Event Name *</label>
-                        <input type="text" id="eventName" name="eventName" required placeholder="Enter event name">
-                    </div>
+        <div class="form-group">
+          <label>Description *</label>
+          <textarea name="description" rows="4" required></textarea>
+        </div>
 
-                    <div class="form-group">
-                        <label for="eventDescription">Event Description *</label>
-                        <textarea id="eventDescription" name="eventDescription" rows="4" required placeholder="Describe your event..."></textarea>
-                    </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Category *</label>
+            <select name="category" required>
+              <option value="">Select</option>
+              <option value="sports">Sports</option>
+              <option value="esports">Esports</option>
+              <option value="dance">Dance</option>
+              <option value="art">Art</option>
+              <option value="literature">Literature</option>
+              <option value="music">Music</option>
+            </select>
+          </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="eventCategory">Category *</label>
-                            <select id="eventCategory" name="eventCategory" required>
-                                <option value="">Select category</option>
-                                <option value="sports">Sports</option>
-                                <option value="esports">Esports</option>
-                                <option value="dance">Dance</option>
-                                <option value="art">Art</option>
-                                <option value="literature">Literature</option>
-                                <option value="music">Music</option>
-                            </select>
-                        </div>
+          <div class="form-group">
+            <label>Price (₹) *</label>
+            <input type="number" name="price" min="0" required>
+          </div>
+        </div>
+        <div class="form-group">
+         <label>Registration Link *</label>
+        <input type="url" name="registration_link" placeholder="https://..." required>
+        </div>
 
-                        <div class="form-group">
-                            <label for="eventPrice">Price (₹) *</label>
-                            <input type="number" id="eventPrice" name="eventPrice" required min="0" placeholder="0">
-                        </div>
-                    </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="eventDate">Date *</label>
-                            <input type="date" id="eventDate" name="eventDate" required>
-                        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date *</label>
+            <input type="date" id="eventDate" required>
+          </div>
 
-                        <div class="form-group">
-                            <label for="eventTime">Time *</label>
-                            <input type="time" id="eventTime" name="eventTime" required>
-                        </div>
-                    </div>
+          <div class="form-group">
+            <label>Time *</label>
+            <input type="time" id="eventTime" required>
+          </div>
+        </div>
 
-                    <div class="form-group">
+        <div class="form-group">
   <label>Event Image (optional)</label>
 
-  <div class="image-dropbox" id="imageDrop">
-    <p>📷 Drag & drop an image here<br>or click to upload</p>
-    <input
-      type="file"
-      id="eventImage"
-      accept="image/*"
-      hidden
-    />
+  <div class="drop-zone" id="dropZone">
+    <p class="drop-text">
+      Drag & drop your image here<br>
+      <span>or click to browse</span>
+    </p>
+    <input type="file" name="image" id="imageInput" accept="image/*" hidden>
   </div>
 
-  <img id="imagePreview" class="image-preview" />
+  <img id="previewImage" class="preview-image" />
 </div>
 
-                    <div class="form-actions">
-                        <button type="submit" class="submit-btn">Register Event</button>
-                        <a href="index.html" class="cancel-btn">Cancel</a>
-                    </div>
-                </form>
 
-                <div class="success-message" id="successMessage">
-                    <div class="success-content">
-                        <span class="success-icon">✓</span>
-                        <p>Event registered successfully! Redirecting to home...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+        <button type="submit" class="register-btn" id="registerBtn">
+  <span class="btn-text">Register Event</span>
+  <span class="btn-loader"></span>
+</button>
 
-    <script>
+        
+
+
+      </form>
+
+    </div>
+  </div>
+</section>
+
+<script>
 document.addEventListener('DOMContentLoaded', () => {
+  const dropZone = document.getElementById('dropZone');
+const imageInput = document.getElementById('imageInput');
+const previewImage = document.getElementById('previewImage');
 
-  /* ---------------- Notifications ---------------- */
-  function toggleNotifications() {
-    const dropdown = document.getElementById('notificationDropdown');
-    dropdown.classList.toggle('show');
+dropZone.addEventListener('click', () => imageInput.click());
+
+dropZone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropZone.classList.add('drag-active');
+});
+
+dropZone.addEventListener('dragleave', () => {
+  dropZone.classList.remove('drag-active');
+});
+
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-active');
+
+  const file = e.dataTransfer.files[0];
+  if (file) handleImage(file);
+});
+
+imageInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) handleImage(file);
+});
+
+function handleImage(file) {
+  if (!file.type.startsWith('image/')) {
+    alert('Only image files allowed');
+    return;
   }
-  window.toggleNotifications = toggleNotifications;
 
-  window.addEventListener('click', function (e) {
-    if (!e.target.matches('.notification-btn')) {
-      const dropdown = document.getElementById('notificationDropdown');
-      if (dropdown.classList.contains('show')) {
-        dropdown.classList.remove('show');
-      }
-    }
-  });
+  imageInput.files = createFileList(file);
 
-  /* ---------------- Date min ---------------- */
+  const reader = new FileReader();
+  reader.onload = () => {
+    previewImage.src = reader.result;
+    previewImage.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+/* Needed because input.files is read-only */
+function createFileList(file) {
+  const dt = new DataTransfer();
+  dt.items.add(file);
+  return dt.files;
+}
+
+
+  // set minimum date
   document.getElementById('eventDate').min =
     new Date().toISOString().split('T')[0];
 
-  /* ---------------- Image Drop Box ---------------- */
-  const dropBox = document.getElementById('imageDrop');
-  const fileInput = document.getElementById('eventImage');
-  const preview = document.getElementById('imagePreview');
-
-  dropBox.addEventListener('click', () => fileInput.click());
-
-  dropBox.addEventListener('dragover', e => {
-    e.preventDefault();
-    dropBox.classList.add('dragging');
-  });
-
-  dropBox.addEventListener('dragleave', () => {
-    dropBox.classList.remove('dragging');
-  });
-
-  dropBox.addEventListener('drop', e => {
-    e.preventDefault();
-    dropBox.classList.remove('dragging');
-    const file = e.dataTransfer.files[0];
-    if (file) handleImage(file);
-  });
-
-  fileInput.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (file) handleImage(file);
-  });
-
-  function handleImage(file) {
-    if (!file.type.startsWith('image/')) {
-      alert('Please upload an image file');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      preview.src = reader.result;
-      preview.style.display = 'block';
-    };
-    reader.readAsDataURL(file);
-
-    fileInput._file = file;
-  }
-
-  /* ---------------- Form Submit ---------------- */
+  const form = document.getElementById('eventForm');
   const API_BASE = window.location.origin;
 
-  window.handleSubmit = async function (event) {
-    event.preventDefault();
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
 
-    const submitBtn = event.target.querySelector('.submit-btn');
-    const successMessage = document.getElementById('successMessage');
+  const date = document.getElementById('eventDate').value;
+  const time = document.getElementById('eventTime').value;
 
-    const formData = new FormData();
-    formData.append('name', event.target.eventName.value);
-    formData.append('description', event.target.eventDescription.value);
-    formData.append('category', event.target.eventCategory.value);
-    formData.append('price', event.target.eventPrice.value);
-    formData.append(
-      'time',
-      `${event.target.eventDate.value}T${event.target.eventTime.value}`
-    );
+  const meta = {
+  name: form.name.value.trim(),
+  description: form.description.value.trim(),
+  category: form.category.value,
+  price: form.price.value,
+  registration_link: form.registration_link.value.trim(),
+  time: `${date}T${time}`
+};
 
-    if (fileInput._file) {
-      formData.append('image', fileInput._file);
-    }
 
-    try {
-      submitBtn.disabled = true;
+  // Store basic event data
+  sessionStorage.setItem('pendingEventMeta', JSON.stringify(meta));
 
-      const res = await fetch(`${API_BASE}/api/events`, {
-        method: 'POST',
-        body: formData
-      });
+  const file = document.getElementById('imageInput').files[0];
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || 'Failed to register event');
-      }
+  // If image exists, convert to base64 first
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      sessionStorage.setItem('pendingEventImage', reader.result);
+      window.location.href = 'authentication.html';
+    };
+    reader.readAsDataURL(file);
+  } else {
+    window.location.href = 'authentication.html';
+  }
+});
 
-      successMessage.style.display = 'flex';
-      setTimeout(() => (window.location.href = 'index.html'), 2000);
 
-    } catch (err) {
-      alert(err.message);
-      submitBtn.disabled = false;
-    }
-  };
 
 });
 </script>

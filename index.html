@@ -106,6 +106,8 @@
                 if (!res.ok) throw new Error('Failed to load events');
                 const events = await res.json();
                 displayEvents(events);
+                updateNotifications(events);
+
             } catch (err) {
                 grid.innerHTML = '<p class="events-error">Could not load events. Make sure the backend is running at ' + API_BASE + '</p>';
             }
@@ -133,24 +135,92 @@
                 return 0;
             });
 
-            grid.innerHTML = filtered.map(event => `
-                <div class="event-card" data-category="${event.category}">
-                    <div class="event-image">
-                        <img src="${event.image}" alt="${event.name}">
-                    </div>
-                    <div class="event-info">
-                        <h3 class="event-name">${event.name}</h3>
-                        <div class="event-description">
-                            <p>${event.description}</p>
-                        </div>
-                        <div class="event-details">
-                            <span class="event-price">₹${event.price}</span>
-                            <span class="event-time">${formatDateTime(event.time)}</span>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
+      grid.innerHTML = filtered.map(event => `
+  <div class="event-card" data-category="${event.category}">
+    
+    <div class="event-image">
+      <img src="${event.image || 'https://via.placeholder.com/400x250?text=No+Image'}" alt="${event.name}">
+      <div class="event-arrow" onclick="event.stopPropagation(); window.open('${event.registration_link}', '_blank')">
+        →
+      </div>
+    </div>
+
+    <div class="event-info">
+      <h3 class="event-name">${event.name}</h3>
+      <div class="event-description">
+        <p>${event.description}</p>
+      </div>
+      <div class="event-details">
+        <span class="event-price">₹${event.price}</span>
+        <span class="event-time">${formatDateTime(event.time)}</span>
+      </div>
+    </div>
+
+  </div>
+`).join('');
         }
+        function updateNotifications(events) {
+    const dropdown = document.getElementById('notificationDropdown');
+    const header = dropdown.querySelector('.notification-header');
+
+    // Clear old items except header
+    dropdown.innerHTML = '';
+    dropdown.appendChild(header);
+
+    const notifications = [];
+
+    const now = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(now.getDate() + 1);
+
+    const seenEventIds = JSON.parse(localStorage.getItem('seenEvents') || '[]');
+
+    events.forEach(event => {
+        const eventDate = new Date(event.time);
+
+        // New event notification
+        if (!seenEventIds.includes(event.id)) {
+            notifications.push({
+                title: `New Event: ${event.name}`,
+                time: 'Just added'
+            });
+            seenEventIds.push(event.id);
+        }
+
+        // Reminder for tomorrow
+        if (
+            eventDate.getDate() === tomorrow.getDate() &&
+            eventDate.getMonth() === tomorrow.getMonth() &&
+            eventDate.getFullYear() === tomorrow.getFullYear()
+        ) {
+            notifications.push({
+                title: `Reminder: ${event.name} is tomorrow`,
+                time: eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+        }
+    });
+
+    localStorage.setItem('seenEvents', JSON.stringify(seenEventIds));
+
+    if (notifications.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'notification-item';
+        empty.innerHTML = `<div class="notification-title">No new notifications</div>`;
+        dropdown.appendChild(empty);
+        return;
+    }
+
+    notifications.forEach(n => {
+        const item = document.createElement('div');
+        item.className = 'notification-item';
+        item.innerHTML = `
+            <div class="notification-title">${n.title}</div>
+            <div class="notification-time">${n.time}</div>
+        `;
+        dropdown.appendChild(item);
+    });
+}
+
 
         function formatDateTime(dateString) {
             const date = new Date(dateString);

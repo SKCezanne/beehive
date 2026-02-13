@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Verify SRM Email</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: linear-gradient(135deg, #ffecd2, #fcb69f);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Background glow effect */
+    body::before {
+      content: "";
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(255,87,34,0.3), transparent);
+      filter: blur(80px);
+      animation: floatGlow 6s infinite alternate ease-in-out;
+    }
+
+    @keyframes floatGlow {
+      from { transform: translate(-50px, -50px); }
+      to { transform: translate(50px, 50px); }
+    }
+
+    .auth-card {
+      position: relative;
+      width: 380px;
+      padding: 35px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.25);
+      backdrop-filter: blur(15px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      animation: fadeIn 0.6s ease forwards;
+      transform: translateY(30px);
+      opacity: 0;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h2 {
+      margin: 0 0 25px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      outline: none;
+      font-size: 14px;
+      background: rgba(255,255,255,0.8);
+      transition: 0.2s;
+    }
+
+    .input-group input:focus {
+      box-shadow: 0 0 0 3px rgba(255,87,34,0.2);
+    }
+
+    .auth-btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #ff9800, #ff5722);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .auth-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(255,87,34,0.4);
+    }
+
+    .auth-btn:active {
+      transform: scale(0.96);
+    }
+
+    .auth-btn.loading {
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    .loader {
+      display: none;
+      width: 18px;
+      height: 18px;
+      border: 3px solid rgba(255,255,255,0.4);
+      border-top: 3px solid white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .otp-section {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+
+    .otp-section.active {
+      max-height: 200px;
+      margin-top: 15px;
+    }
+
+    .shake {
+      animation: shake 0.4s ease;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      50% { transform: translateX(6px); }
+      75% { transform: translateX(-6px); }
+      100% { transform: translateX(0); }
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="auth-card">
+  <h2>Verify Your SRM Email</h2>
+
+  <div class="input-group">
+    <input type="email" id="email" placeholder="Enter SRM Email">
+  </div>
+
+  <button class="auth-btn" id="sendBtn" onclick="sendOtp()">
+    Send OTP
+  </button>
+
+  <div class="otp-section" id="otpSection">
+    <div class="input-group">
+      <input type="text" id="otp" placeholder="Enter OTP">
+    </div>
+
+    <button class="auth-btn" id="verifyBtn" onclick="verifyOtp()">
+      
+      Verify & Continue
+    </button>
+  </div>
+</div>
+
+<script>
+const otpSection = document.getElementById('otpSection');
+
+async function sendOtp() {
+  const email = document.getElementById('email').value;
+  const button = document.getElementById('sendBtn');
+
+  if (!email) {
+    button.classList.add('shake');
+    setTimeout(() => button.classList.remove('shake'), 400);
+    return;
+  }
+
+  button.classList.add('loading');
+
+  const res = await fetch('/api/send-otp', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ email })
+  });
+
+  const data = await res.json();
+  button.classList.remove('loading');
+
+  if (res.ok) {
+    otpSection.classList.add('active');
+  } else {
+    alert(data.error);
+  }
+}
+
+async function verifyOtp() {
+  const email = document.getElementById('email').value;
+  const otp = document.getElementById('otp').value;
+  const button = document.getElementById('verifyBtn');
+
+  if (!otp) {
+    button.classList.add('shake');
+    setTimeout(() => button.classList.remove('shake'), 400);
+    return;
+  }
+
+  button.classList.add('loading');
+
+  const res = await fetch('/api/verify-otp', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ email, otp })
+  });
+
+  const data = await res.json();
+  button.classList.remove('loading');
+
+  if (res.ok) {
+
+  const meta = JSON.parse(sessionStorage.getItem('pendingEventMeta'));
+  const imageBase64 = sessionStorage.getItem('pendingEventImage');
+
+  if (meta) {
+    const formData = new FormData();
+
+    Object.keys(meta).forEach(key => {
+      formData.append(key, meta[key]);
+    });
+
+    if (imageBase64) {
+      const blob = await fetch(imageBase64).then(r => r.blob());
+      formData.append('image', blob, 'upload.png');
+    }
+
+    await fetch('/api/events', {
+      method: 'POST',
+      body: formData
+    });
+
+    sessionStorage.removeItem('pendingEventMeta');
+    sessionStorage.removeItem('pendingEventImage');
+  }
+
+  window.location.href = 'index.html';
+
+} else {
+  alert(data.error);
+}
+
+}
+</script>
+
+</body>
+</html>

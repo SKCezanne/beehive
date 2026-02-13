@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "id": 3,
+    "name": "anirudh orgy party",
+    "description": "anirudh invites u to this private island where u can forget about all your worries (he will take care of u)",
+    "category": "sports",
+    "price": 0,
+    "time": "2026-02-27T18:30",
+    "image": "/uploads/1771003667501-485023294.png",
+    "registration_link": null
+  },
+  {
+    "id": 11,
+    "name": "aa",
+    "description": "aa",
+    "category": "literature",
+    "price": 1,
+    "time": "2026-03-03T21:05",
+    "image": null,
+    "registration_link": "https://www.youtube.com/watch?v=pR1KxbUsbCI&list=RDpqodS048KJc&index=26"
+  }
+]

@@ -33,6 +33,7 @@ async function initDb() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
+  await conn.query(`delete from events where month(time)*100 + day(time) < month(curdate())*100 + day(curdate());`);
 }
 
 module.exports = { getPool, initDb };

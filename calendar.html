@@ -182,11 +182,25 @@ const API_BASE = window.location.origin;
 let currentDate = new Date();
 let allEvents = [];
 
+async function loadEvents() {
+            const grid = document.getElementById('eventsGrid');
+            try {
+                const res = await fetch(`${API_BASE}/api/events`);
+                if (!res.ok) throw new Error('Failed to load events');
+                const events = await res.json();
+                updateNotifications(events);
+
+            } catch (err) {
+                grid.innerHTML = '<p class="events-error">Could not load events. Make sure the backend is running at ' + API_BASE + '</p>';
+            }
+        }
+
 async function loadCalendar() {
     const res = await fetch(`${API_BASE}/api/events`);
     allEvents = await res.json();
     renderCalendar();
     populateEventList(allEvents);
+    updateNotifications(events);
 }
 
 function renderCalendar() {
@@ -242,6 +256,68 @@ function renderCalendar() {
     }
 
     addTooltips();
+}
+
+function updateNotifications(events) {
+    const dropdown = document.getElementById('notificationDropdown');
+    const header = dropdown.querySelector('.notification-header');
+
+    // Clear old items except header
+    dropdown.innerHTML = '';
+    dropdown.appendChild(header);
+
+    const notifications = [];
+
+    const now = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(now.getDate() + 1);
+
+    const seenEventIds = JSON.parse(localStorage.getItem('seenEvents') || '[]');
+
+    events.forEach(event => {
+        const eventDate = new Date(event.time);
+
+        // New event notification
+        if (!seenEventIds.includes(event.id)) {
+            notifications.push({
+                title: `New Event: ${event.name}`,
+                time: 'Just added'
+            });
+            seenEventIds.push(event.id);
+        }
+
+        // Reminder for tomorrow
+        if (
+            eventDate.getDate() === tomorrow.getDate() &&
+            eventDate.getMonth() === tomorrow.getMonth() &&
+            eventDate.getFullYear() === tomorrow.getFullYear()
+        ) {
+            notifications.push({
+                title: `Reminder: ${event.name} is tomorrow`,
+                time: eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+        }
+    });
+
+    localStorage.setItem('seenEvents', JSON.stringify(seenEventIds));
+
+    if (notifications.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'notification-item';
+        empty.innerHTML = `<div class="notification-title">No new notifications</div>`;
+        dropdown.appendChild(empty);
+        return;
+    }
+
+    notifications.forEach(n => {
+        const item = document.createElement('div');
+        item.className = 'notification-item';
+        item.innerHTML = `
+            <div class="notification-title">${n.title}</div>
+            <div class="notification-time">${n.time}</div>
+        `;
+        dropdown.appendChild(item);
+    });
 }
 
 function populateEventList(events) {
@@ -340,6 +416,7 @@ document.getElementById('nextMonth').addEventListener('click', () => {
 
 
 loadCalendar();
+loadEvents();
 </script>
 
 

@@ -3,15 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Register Event - Event Hive</title>
+  <title>Register Event — Event Hive</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <nav class="top-bar">
   <div class="nav-container">
-    <div class="logo">🐝 Event Hive</div>
-    <a href="index.html" class="calendar-btn">🏠 Home</a>
+    <a href="index.html" class="logo">⬡ Event Hive</a>
+    <div class="nav-right">
+      <a href="about.html" class="nav-link">About ℹ️</a>
+      <a href="calendar.html" class="nav-link">📅 Calendar</a>
+      <a href="cart.html" class="nav-link">🛒 My Events</a>
+      <a href="profile.html" class="nav-link">👤 Profile</a>
+      <div class="notification-container">
+        <button class="notification-btn" onclick="toggleNotifications()">🔔</button>
+        <div class="notification-dropdown" id="notificationDropdown">
+          <div class="notification-header">Notifications</div>
+        </div>
+      </div>
+    </div>
   </div>
 </nav>
 
@@ -19,7 +33,7 @@
   <div class="container">
     <div class="register-container">
 
-      <h1>Register Your Event</h1>
+      <h1>⬡ Register Your Event</h1>
 
       <form id="eventForm" enctype="multipart/form-data">
 
@@ -196,6 +210,16 @@ form.addEventListener('submit', async (e) => {
 
 
 
+});
+
+/* ---- Notification toggle ---- */
+function toggleNotifications() {
+  const dd = document.getElementById('notificationDropdown');
+  dd.classList.toggle('show');
+}
+document.addEventListener('click', e => {
+  const dd = document.getElementById('notificationDropdown');
+  if (!e.target.closest('.notification-container') && dd) dd.classList.remove('show');
 });
 </script>
 

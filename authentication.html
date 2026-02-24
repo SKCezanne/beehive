@@ -2,46 +2,84 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Verify SRM Email</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify SRM Email — Event Hive</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:          #0b0c10;
+      --bg-card:     #16181e;
+      --bg-input:    #121418;
+      --honey:       #f5a623;
+      --honey-light: #ffc857;
+      --honey-glow:  rgba(245,166,35,0.25);
+      --border:      rgba(245,166,35,0.15);
+      --border-active: rgba(245,166,35,0.45);
+      --text:        #eaeaea;
+      --text-muted:  #5e5f67;
+      --radius:      14px;
+    }
+
     body {
-      margin: 0;
-      font-family: system-ui, sans-serif;
-      background: linear-gradient(135deg, #ffecd2, #fcb69f);
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
       display: flex;
       align-items: center;
       justify-content: center;
       height: 100vh;
       overflow: hidden;
+      color: var(--text);
     }
 
-    /* Background glow effect */
+    /* honeycomb background pattern */
     body::before {
-      content: "";
-      position: absolute;
-      width: 500px;
-      height: 500px;
-      background: radial-gradient(circle, rgba(255,87,34,0.3), transparent);
-      filter: blur(80px);
-      animation: floatGlow 6s infinite alternate ease-in-out;
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100' fill='none' stroke='rgba(245,166,35,0.06)' stroke-width='1'/%3E%3Cpath d='M28 0L28 34L0 50L0 84L28 100L56 84L56 50L28 34' fill='none' stroke='rgba(245,166,35,0.06)' stroke-width='1'/%3E%3C/svg%3E");
+      background-size: 56px 100px;
+      pointer-events: none;
+      z-index: 0;
     }
 
-    @keyframes floatGlow {
-      from { transform: translate(-50px, -50px); }
-      to { transform: translate(50px, 50px); }
+    /* ambient glow */
+    body::after {
+      content: '';
+      position: fixed;
+      width: 420px;
+      height: 420px;
+      background: radial-gradient(circle, var(--honey-glow), transparent);
+      filter: blur(100px);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: pulse 6s infinite alternate ease-in-out;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes pulse {
+      from { opacity: 0.3; transform: translate(-50%, -50%) scale(0.9); }
+      to   { opacity: 0.6; transform: translate(-50%, -50%) scale(1.1); }
     }
 
     .auth-card {
       position: relative;
-      width: 380px;
-      padding: 35px;
+      z-index: 1;
+      width: 400px;
+      padding: 40px;
       border-radius: 20px;
-      background: rgba(255,255,255,0.25);
-      backdrop-filter: blur(15px);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-      animation: fadeIn 0.6s ease forwards;
-      transform: translateY(30px);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      box-shadow: 0 12px 48px rgba(0,0,0,0.55);
+      animation: fadeIn 0.5s ease forwards;
+      transform: translateY(20px);
       opacity: 0;
     }
 
@@ -53,56 +91,73 @@
     }
 
     h2 {
-      margin: 0 0 25px;
+      margin: 0 0 8px;
       text-align: center;
-      font-weight: 600;
+      font-weight: 800;
+      font-size: 22px;
+      color: var(--text);
+    }
+
+    .auth-subtitle {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
     }
 
     .input-group {
       position: relative;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
     .input-group input {
       width: 100%;
-      padding: 14px;
-      border-radius: 12px;
-      border: none;
+      padding: 13px 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
       outline: none;
       font-size: 14px;
-      background: rgba(255,255,255,0.8);
-      transition: 0.2s;
+      font-family: inherit;
+      background: var(--bg-input);
+      color: var(--text);
+      transition: 0.25s;
     }
-
+    .input-group input::placeholder {
+      color: var(--text-muted);
+    }
     .input-group input:focus {
-      box-shadow: 0 0 0 3px rgba(255,87,34,0.2);
+      border-color: var(--honey);
+      box-shadow: 0 0 0 3px var(--honey-glow);
     }
 
     .auth-btn {
       width: 100%;
-      padding: 12px;
-      border-radius: 12px;
+      padding: 13px;
+      border-radius: var(--radius);
       border: none;
-      background: linear-gradient(135deg, #ff9800, #ff5722);
-      color: white;
-      font-weight: 600;
+      background: var(--honey);
+      color: #0b0c10;
+      font-weight: 700;
+      font-size: 15px;
       cursor: pointer;
       transition: all 0.25s ease;
+      font-family: inherit;
       position: relative;
       overflow: hidden;
     }
 
     .auth-btn:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 10px 25px rgba(255,87,34,0.4);
+      background: var(--honey-light);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px var(--honey-glow);
     }
 
     .auth-btn:active {
-      transform: scale(0.96);
+      transform: scale(0.97);
     }
 
     .auth-btn.loading {
-      opacity: 0.8;
+      opacity: 0.7;
       pointer-events: none;
     }
 
@@ -110,8 +165,8 @@
       display: none;
       width: 18px;
       height: 18px;
-      border: 3px solid rgba(255,255,255,0.4);
-      border-top: 3px solid white;
+      border: 3px solid rgba(11,12,16,0.3);
+      border-top: 3px solid #0b0c10;
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
       margin: 0 auto;
@@ -129,7 +184,7 @@
 
     .otp-section.active {
       max-height: 200px;
-      margin-top: 15px;
+      margin-top: 16px;
     }
 
     .shake {
@@ -137,22 +192,33 @@
     }
 
     @keyframes shake {
-      0% { transform: translateX(0); }
-      25% { transform: translateX(-6px); }
-      50% { transform: translateX(6px); }
-      75% { transform: translateX(-6px); }
+      0%   { transform: translateX(0); }
+      25%  { transform: translateX(-6px); }
+      50%  { transform: translateX(6px); }
+      75%  { transform: translateX(-6px); }
       100% { transform: translateX(0); }
     }
 
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--honey); }
   </style>
 </head>
 <body>
 
 <div class="auth-card">
-  <h2>Verify Your SRM Email</h2>
+  <h2>⬡ Verify Your Email</h2>
+  <p class="auth-subtitle">Enter your SRM email to receive OTP</p>
 
   <div class="input-group">
-    <input type="email" id="email" placeholder="Enter SRM Email">
+    <input type="email" id="email" placeholder="yourname@srmist.edu.in">
   </div>
 
   <button class="auth-btn" id="sendBtn" onclick="sendOtp()">
@@ -161,14 +227,15 @@
 
   <div class="otp-section" id="otpSection">
     <div class="input-group">
-      <input type="text" id="otp" placeholder="Enter OTP">
+      <input type="text" id="otp" placeholder="Enter 6-digit OTP">
     </div>
 
     <button class="auth-btn" id="verifyBtn" onclick="verifyOtp()">
-      
       Verify & Continue
     </button>
   </div>
+
+  <a href="index.html" class="back-link">← Back to Event Hive</a>
 </div>
 
 <script>

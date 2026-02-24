@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Events — Event Hive</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Top Navigation Bar -->
+<nav class="top-bar">
+  <div class="nav-container">
+    <a href="index.html" class="logo">⬡ Event Hive</a>
+    <div class="nav-right">
+      <a href="about.html" class="nav-link">About ℹ️</a>
+      <a href="calendar.html" class="nav-link">📅 Calendar</a>
+      <a href="cart.html" class="nav-link nav-link--active">🛒 My Events</a>
+      <a href="profile.html" class="nav-link">👤 Profile</a>
+      <div class="notification-container">
+        <button class="notification-btn" onclick="toggleNotifications()">🔔</button>
+        <div class="notification-dropdown" id="notificationDropdown">
+          <div class="notification-header">Notifications</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Cart Section -->
+<section class="cart-section">
+  <div class="container">
+
+    <!-- Header -->
+    <div class="cart-header">
+      <div class="cart-header__left">
+        <h1>🛒 My Events</h1>
+        <p class="cart-header__sub">Events you've registered for — all in one place.</p>
+      </div>
+      <div class="cart-header__right">
+        <div class="cart-count-badge">
+          <span id="cartCount">0</span> events
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="cart-tabs">
+      <button class="cart-tab active" data-filter="all">All</button>
+      <button class="cart-tab" data-filter="upcoming">Upcoming</button>
+      <button class="cart-tab" data-filter="past">Past</button>
+    </div>
+
+    <!-- Cart Grid -->
+    <div class="cart-grid" id="cartGrid">
+      <!-- Populated by JS -->
+    </div>
+
+    <!-- Empty State -->
+    <div class="cart-empty" id="cartEmpty" style="display:none;">
+      <div class="cart-empty__icon">🐝</div>
+      <h2>No events yet!</h2>
+      <p>You haven't registered for any events. Head over to the homepage and find something exciting.</p>
+      <a href="index.html" class="cta-link">Browse Events →</a>
+    </div>
+
+  </div>
+</section>
+
+<script>
+const API_BASE = window.location.origin;
+
+/* ---- Notification toggle ---- */
+function toggleNotifications() {
+  const dd = document.getElementById('notificationDropdown');
+  dd.classList.toggle('show');
+}
+document.addEventListener('click', e => {
+  const dd = document.getElementById('notificationDropdown');
+  if (!e.target.closest('.notification-container') && dd) dd.classList.remove('show');
+});
+
+/* ---- Load registered events ---- */
+let allCartEvents = [];
+
+async function loadCart() {
+  const grid  = document.getElementById('cartGrid');
+  const empty = document.getElementById('cartEmpty');
+
+  try {
+    const res = await fetch(`${API_BASE}/api/cart`);
+    if (res.status === 401) {
+      grid.innerHTML = '';
+      empty.style.display = 'flex';
+      empty.querySelector('h2').textContent = 'Login required';
+      empty.querySelector('p').textContent = 'Please verify your SRM email first to view your registered events.';
+      empty.querySelector('a').href = 'authentication.html';
+      empty.querySelector('a').textContent = 'Verify Email →';
+      return;
+    }
+    if (!res.ok) throw new Error('Failed');
+
+    allCartEvents = await res.json();
+    document.getElementById('cartCount').textContent = allCartEvents.length;
+    renderCart('all');
+
+  } catch (err) {
+    console.error('Cart load error:', err);
+    grid.innerHTML = '<p class="events-error">Could not load your events. Make sure the backend is running.</p>';
+  }
+}
+
+function renderCart(filter) {
+  const grid  = document.getElementById('cartGrid');
+  const empty = document.getElementById('cartEmpty');
+  const now   = new Date();
+
+  let items = allCartEvents;
+  if (filter === 'upcoming') items = items.filter(e => new Date(e.time) >= now);
+  if (filter === 'past')     items = items.filter(e => new Date(e.time) <  now);
+
+  if (items.length === 0) {
+    grid.innerHTML = '';
+    empty.style.display = 'flex';
+    return;
+  }
+
+  empty.style.display = 'none';
+
+  grid.innerHTML = items.map(ev => {
+    const eventDate   = new Date(ev.time);
+    const isPast      = eventDate < now;
+    const month       = eventDate.toLocaleString('en', { month: 'short' }).toUpperCase();
+    const day         = eventDate.getDate();
+    const timeStr     = eventDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    const dateStr     = eventDate.toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    const registeredAt = new Date(ev.registered_at).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+
+    return `
+      <div class="cart-card ${isPast ? 'cart-card--past' : ''}">
+        <div class="cart-card__date-badge">
+          <span class="badge-month">${month}</span>
+          <span class="badge-day">${day}</span>
+        </div>
+
+        <div class="cart-card__image">
+          <img src="${ev.image || 'https://via.placeholder.com/400x200?text=No+Image'}" alt="${ev.name}">
+          ${isPast ? '<div class="cart-card__past-overlay">Event Ended</div>' : ''}
+        </div>
+
+        <div class="cart-card__body">
+          <div class="cart-card__category">${ev.category}</div>
+          <h3 class="cart-card__title">${ev.name}</h3>
+          <p class="cart-card__desc">${ev.description}</p>
+
+          <div class="cart-card__meta">
+            <span>📅 ${dateStr}</span>
+            <span>🕐 ${timeStr}</span>
+            <span>₹${ev.price}</span>
+          </div>
+
+          <div class="cart-card__footer">
+            <span class="cart-card__registered">Registered ${registeredAt}</span>
+            <div class="cart-card__actions">
+              ${ev.registration_link ? `<a href="${ev.registration_link}" target="_blank" class="cart-action-btn cart-action-btn--primary">Open Link ↗</a>` : ''}
+              <button class="cart-action-btn cart-action-btn--danger" onclick="removeFromCart(${ev.event_id})">Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ---- Remove from cart ---- */
+async function removeFromCart(eventId) {
+  if (!confirm('Remove this event from your list?')) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/cart/${eventId}`, { method: 'DELETE' });
+    if (res.ok) {
+      allCartEvents = allCartEvents.filter(e => e.event_id !== eventId);
+      document.getElementById('cartCount').textContent = allCartEvents.length;
+      const activeTab = document.querySelector('.cart-tab.active')?.dataset.filter || 'all';
+      renderCart(activeTab);
+    } else {
+      alert('Failed to remove event');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Network error');
+  }
+}
+
+/* ---- Tab filtering ---- */
+document.querySelectorAll('.cart-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.cart-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    renderCart(tab.dataset.filter);
+  });
+});
+
+/* ---- Init ---- */
+loadCart();
+</script>
+</body>
+</html>

@@ -3,46 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Calendar - Event Hive</title>
+    <title>Event Calendar — Event Hive</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <!-- Top Navigation Bar -->
     <nav class="top-bar">
         <div class="nav-container">
-            <div class="logo">🐝 Event Hive</div>
+            <a href="index.html" class="logo">⬡ Event Hive</a>
             <div class="nav-right">
+                <a href="about.html" class="nav-link">About ℹ️</a>
+                <a href="calendar.html" class="nav-link nav-link--active">📅 Calendar</a>
+                <a href="cart.html" class="nav-link">🛒 My Events</a>
+                <a href="profile.html" class="nav-link">👤 Profile</a>
                 <div class="notification-container">
                     <button class="notification-btn" onclick="toggleNotifications()">🔔</button>
                     <div class="notification-dropdown" id="notificationDropdown">
                         <div class="notification-header">Notifications</div>
-                        <div class="notification-item">
-                            <div class="notification-title">New Event: Dance Competition</div>
-                            <div class="notification-time">2 hours ago</div>
-                        </div>
-                        <div class="notification-item">
-                            <div class="notification-title">Registration Open: Art Exhibition</div>
-                            <div class="notification-time">5 hours ago</div>
-                        </div>
                     </div>
                 </div>
-                <a href="index.html" class="calendar-btn">🏠 Home</a>
             </div>
         </div>
     </nav>
 
     <section class="calendar-section">
         <div class="container">
-            <h1 class="calendar-title">Event Calendar</h1>
+            <h1 class="calendar-title">⬡ Event Calendar</h1>
+
+            <!-- Legend -->
+            <div class="calendar-legend">
+                <div class="legend-item">
+                    <span class="legend-dot legend-dot--today"></span> Today
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot legend-dot--occupied"></span> Occupied
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot legend-dot--free"></span> Free
+                </div>
+            </div>
+
             <div class="calendar-container">
+                <!-- Calendar grid (fully dynamic) -->
                 <div class="calendar-month">
                     <div class="month-header">
-    <button id="prevMonth">◀</button>
-    <h2 id="calendarTitle"></h2>
-    <button id="nextMonth">▶</button>
-</div>
-
-                    <div class="calendar-grid">
+                        <button id="prevMonth">◀</button>
+                        <h2 id="calendarTitle"></h2>
+                        <button id="nextMonth">▶</button>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid">
                         <div class="calendar-day-header">Sun</div>
                         <div class="calendar-day-header">Mon</div>
                         <div class="calendar-day-header">Tue</div>
@@ -50,88 +62,22 @@
                         <div class="calendar-day-header">Thu</div>
                         <div class="calendar-day-header">Fri</div>
                         <div class="calendar-day-header">Sat</div>
-                        
-                        <div class="calendar-day"></div>
-                        <div class="calendar-day"></div>
-                        <div class="calendar-day"></div>
-                        <div class="calendar-day"></div>
-                        <div class="calendar-day"></div>
-                        <div class="calendar-day">1</div>
-                        <div class="calendar-day">2</div>
-                        <div class="calendar-day">3</div>
-                        <div class="calendar-day">4</div>
-                        <div class="calendar-day">5</div>
-                        <div class="calendar-day">6</div>
-                        <div class="calendar-day">7</div>
-                        <div class="calendar-day">8</div>
-                        <div class="calendar-day">9</div>
-                        <div class="calendar-day">10</div>
-                        <div class="calendar-day">11</div>
-                        <div class="calendar-day">12</div>
-                        <div class="calendar-day">13</div>
-                        <div class="calendar-day">14</div>
-                        <div class="calendar-day event-day" data-event="Poetry Slam Night - 7:00 PM">15</div>
-                        <div class="calendar-day">16</div>
-                        <div class="calendar-day event-day" data-event="Art Exhibition - 10:00 AM">17</div>
-                        <div class="calendar-day event-day" data-event="Art Exhibition - 10:00 AM">18</div>
-                        <div class="calendar-day">19</div>
-                        <div class="calendar-day event-day" data-event="Cricket Championship - 9:00 AM">20</div>
-                        <div class="calendar-day">21</div>
-                        <div class="calendar-day event-day" data-event="Gaming Tournament - 2:00 PM">22</div>
-                        <div class="calendar-day">23</div>
-                        <div class="calendar-day">24</div>
-                        <div class="calendar-day event-day" data-event="Music Festival - 4:00 PM">25</div>
-                        <div class="calendar-day">26</div>
-                        <div class="calendar-day">27</div>
-                        <div class="calendar-day">28</div>
-                        <div class="calendar-day">29</div>
-                        <div class="calendar-day">30</div>
-                        <div class="calendar-day">31</div>
                     </div>
                 </div>
-                <div class="calendar-events-list">
-                    <h3>Upcoming Events</h3>
-                    <div class="event-list-item">
-                        <div class="event-date">Mar 15</div>
-                        <div class="event-info-cal">
-                            <div class="event-name-cal">Poetry Slam Night</div>
-                            <div class="event-time-cal">7:00 PM</div>
+
+                <!-- Sidebar: upcoming list + selected-day detail -->
+                <div class="calendar-sidebar">
+                    <!-- Day detail panel (shown when clicking a day) -->
+                    <div class="day-detail-panel" id="dayDetailPanel">
+                        <h3 id="dayDetailTitle">Select a date</h3>
+                        <div id="dayDetailBody" class="day-detail-body">
+                            <p class="day-detail-empty">Click on any date to see events</p>
                         </div>
                     </div>
-                    <div class="event-list-item">
-                        <div class="event-date">Mar 17</div>
-                        <div class="event-info-cal">
-                            <div class="event-name-cal">Art Exhibition</div>
-                            <div class="event-time-cal">10:00 AM</div>
-                        </div>
-                    </div>
-                    <div class="event-list-item">
-                        <div class="event-date">Mar 18</div>
-                        <div class="event-info-cal">
-                            <div class="event-name-cal">Art Exhibition</div>
-                            <div class="event-time-cal">10:00 AM</div>
-                        </div>
-                    </div>
-                    <div class="event-list-item">
-                        <div class="event-date">Mar 20</div>
-                        <div class="event-info-cal">
-                            <div class="event-name-cal">Cricket Championship</div>
-                            <div class="event-time-cal">9:00 AM</div>
-                        </div>
-                    </div>
-                    <div class="event-list-item">
-                        <div class="event-date">Mar 22</div>
-                        <div class="event-info-cal">
-                            <div class="event-name-cal">Gaming Tournament</div>
-                            <div class="event-time-cal">2:00 PM</div>
-                        </div>
-                    </div>
-                    <div class="event-list-item">
-                        <div class="event-date">Mar 25</div>
-                        <div class="event-info-cal">
-                            <div class="event-name-cal">Music Festival</div>
-                            <div class="event-time-cal">4:00 PM</div>
-                        </div>
+
+                    <!-- Upcoming events list -->
+                    <div class="calendar-events-list" id="calendarEventsList">
+                        <h3>Upcoming Events</h3>
                     </div>
                 </div>
             </div>
@@ -143,30 +89,6 @@ function toggleNotifications() {
     const dropdown = document.getElementById('notificationDropdown');
     dropdown.classList.toggle('show');
 }
-function goToEvent(eventTime) {
-    const eventDate = new Date(eventTime);
-
-    // Switch calendar to that month
-    currentDate = new Date(eventDate.getFullYear(), eventDate.getMonth(), 1);
-    renderCalendar();
-
-    // Small delay so grid renders first
-    setTimeout(() => {
-        const days = document.querySelectorAll('.calendar-day');
-
-        days.forEach(day => {
-            if (day.textContent == eventDate.getDate()) {
-                day.classList.add('highlight-day');
-
-                // Remove highlight after 2 seconds
-                setTimeout(() => {
-                    day.classList.remove('highlight-day');
-                }, 2000);
-            }
-        });
-    }, 50);
-}
-
 
 window.addEventListener('click', function(e) {
     if (!e.target.matches('.notification-btn')) {
@@ -178,245 +100,316 @@ window.addEventListener('click', function(e) {
 });
 
 const API_BASE = window.location.origin;
-
 let currentDate = new Date();
 let allEvents = [];
+let selectedDay = null;
+let myRegisteredIds = [];
 
-async function loadEvents() {
-            const grid = document.getElementById('eventsGrid');
-            try {
-                const res = await fetch(`${API_BASE}/api/events`);
-                if (!res.ok) throw new Error('Failed to load events');
-                const events = await res.json();
-                updateNotifications(events);
-
-            } catch (err) {
-                grid.innerHTML = '<p class="events-error">Could not load events. Make sure the backend is running at ' + API_BASE + '</p>';
-            }
-        }
-
+// ── Load everything ──
 async function loadCalendar() {
-    const res = await fetch(`${API_BASE}/api/events`);
-    allEvents = await res.json();
+    try {
+        // Load events for the current month from the backend
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth() + 1; // JS months are 0-indexed
+        const res = await fetch(`${API_BASE}/api/calendar/${year}/${month}`);
+        if (!res.ok) throw new Error('Failed');
+        allEvents = await res.json();
+    } catch {
+        // Fallback to all events
+        try {
+            const res = await fetch(`${API_BASE}/api/events`);
+            if (!res.ok) throw new Error('Failed');
+            allEvents = await res.json();
+        } catch {
+            allEvents = [];
+        }
+    }
+
+    // Load user's registered event IDs
+    try {
+        const regRes = await fetch(`${API_BASE}/api/my-registrations`);
+        if (regRes.ok) {
+            const data = await regRes.json();
+            myRegisteredIds = data.ids || [];
+        }
+    } catch { myRegisteredIds = []; }
+
     renderCalendar();
-    populateEventList(allEvents);
-    updateNotifications(events);
+    // Load ALL events for the upcoming sidebar
+    try {
+        const allRes = await fetch(`${API_BASE}/api/events`);
+        if (allRes.ok) {
+            const allEvts = await allRes.json();
+            populateEventList(allEvts);
+            updateNotifications(allEvts);
+        }
+    } catch {}
 }
 
+// ── Render calendar grid ──
 function renderCalendar() {
-    const grid = document.querySelector('.calendar-grid');
+    const grid = document.getElementById('calendarGrid');
 
+    // Keep headers, remove days
     const headers = Array.from(grid.querySelectorAll('.calendar-day-header'));
     grid.innerHTML = '';
     headers.forEach(h => grid.appendChild(h));
 
-    const year = currentDate.getFullYear();
+    const year  = currentDate.getFullYear();
     const month = currentDate.getMonth();
+    const today = new Date();
 
     const monthNames = [
-        "January","February","March","April","May","June",
-        "July","August","September","October","November","December"
+        'January','February','March','April','May','June',
+        'July','August','September','October','November','December'
     ];
+    document.getElementById('calendarTitle').textContent = `${monthNames[month]} ${year}`;
 
-    document.getElementById('calendarTitle').textContent =
-        `${monthNames[month]} ${year}`;
-
-    const firstDay = new Date(year, month, 1).getDay();
+    const firstDay   = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
+    // Empty cells before first day
     for (let i = 0; i < firstDay; i++) {
-        grid.innerHTML += `<div class="calendar-day"></div>`;
+        const empty = document.createElement('div');
+        empty.className = 'calendar-day calendar-day--empty';
+        grid.appendChild(empty);
     }
 
+    // Build a quick lookup: dateKey → events[]
+    const eventMap = {};
+    allEvents.forEach(ev => {
+        const d = new Date(ev.time);
+        const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        if (!eventMap[key]) eventMap[key] = [];
+        eventMap[key].push(ev);
+    });
+
     for (let day = 1; day <= daysInMonth; day++) {
-        const fullDate = new Date(year, month, day);
+        const cell  = document.createElement('div');
+        const key   = `${year}-${month}-${day}`;
+        const evts  = eventMap[key] || [];
+        const isToday =
+            day === today.getDate() &&
+            month === today.getMonth() &&
+            year === today.getFullYear();
 
-        const dayEvents = allEvents.filter(e => {
-            const eventDate = new Date(e.time);
-            return (
-                eventDate.getDate() === fullDate.getDate() &&
-                eventDate.getMonth() === fullDate.getMonth() &&
-                eventDate.getFullYear() === fullDate.getFullYear()
-            );
-        });
+        cell.className = 'calendar-day';
+        if (evts.length > 0) cell.classList.add('event-day');
+        if (isToday)         cell.classList.add('calendar-day--today');
 
-        if (dayEvents.length > 0) {
-            grid.innerHTML += `
-                <div class="calendar-day event-day"
-                     data-events="${dayEvents.map(e =>
-                        e.name + ' - ' +
-                        new Date(e.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
-                     ).join(', ')}">
-                    ${day}
-                </div>
-            `;
-        } else {
-            grid.innerHTML += `<div class="calendar-day">${day}</div>`;
+        // Badge showing number of events
+        cell.innerHTML = evts.length > 0
+            ? `${day}<span class="day-badge">${evts.length}</span>`
+            : `${day}`;
+
+        // Tooltip data
+        if (evts.length > 0) {
+            cell.dataset.events = evts.map(e =>
+                e.name + ' — ' + new Date(e.time).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })
+            ).join(' | ');
         }
+
+        // Click → show detail panel
+        cell.addEventListener('click', () => showDayDetail(year, month, day, evts, cell));
+
+        grid.appendChild(cell);
     }
 
     addTooltips();
 }
 
+// ── Day detail panel ──
+function showDayDetail(year, month, day, events, clickedCell) {
+    // highlight selected
+    document.querySelectorAll('.calendar-day--selected').forEach(el => el.classList.remove('calendar-day--selected'));
+    clickedCell.classList.add('calendar-day--selected');
+
+    const title = document.getElementById('dayDetailTitle');
+    const body  = document.getElementById('dayDetailBody');
+
+    const dateObj = new Date(year, month, day);
+    title.textContent = dateObj.toLocaleDateString('en-IN', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+
+    if (events.length === 0) {
+        body.innerHTML = `
+            <div class="day-detail-empty">
+                <span class="empty-icon">📭</span>
+                <p>No events on this date</p>
+                <a href="register.html" class="day-register-link">+ Register an event</a>
+            </div>`;
+        return;
+    }
+
+    body.innerHTML = events.map(ev => {
+        const isRegistered = myRegisteredIds.includes(ev.id);
+        return `
+        <div class="day-event-card">
+            <div class="day-event-time">
+                ${new Date(ev.time).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })}
+            </div>
+            <div class="day-event-info">
+                <div class="day-event-name">${ev.name}</div>
+                <div class="day-event-cat">${ev.category}</div>
+            </div>
+            <div class="day-event-price">₹${ev.price}</div>
+            <button class="day-event-reg-btn ${isRegistered ? 'registered' : ''}"
+                    onclick="calendarRegister(${ev.id}, this)"
+                    ${isRegistered ? 'disabled' : ''}>
+                ${isRegistered ? '✓ Joined' : '+ Join'}
+            </button>
+        </div>
+    `}).join('');
+}
+
+// ── Navigate to a specific event date (from sidebar click) ──
+function goToEvent(eventTime) {
+    const eventDate = new Date(eventTime);
+    currentDate = new Date(eventDate.getFullYear(), eventDate.getMonth(), 1);
+    renderCalendar();
+
+    setTimeout(() => {
+        const days = document.querySelectorAll('.calendar-day');
+        days.forEach(day => {
+            if (parseInt(day.textContent) === eventDate.getDate() && day.classList.contains('event-day')) {
+                day.classList.add('highlight-day');
+                day.click(); // open detail panel
+                setTimeout(() => day.classList.remove('highlight-day'), 2000);
+            }
+        });
+    }, 60);
+}
+
+// ── Notifications ──
 function updateNotifications(events) {
     const dropdown = document.getElementById('notificationDropdown');
-    const header = dropdown.querySelector('.notification-header');
-
-    // Clear old items except header
+    const header   = dropdown.querySelector('.notification-header');
     dropdown.innerHTML = '';
     dropdown.appendChild(header);
 
     const notifications = [];
-
     const now = new Date();
-    const tomorrow = new Date();
-    tomorrow.setDate(now.getDate() + 1);
-
-    const seenEventIds = JSON.parse(localStorage.getItem('seenEvents') || '[]');
+    const tomorrow = new Date(); tomorrow.setDate(now.getDate() + 1);
+    const seenIds = JSON.parse(localStorage.getItem('seenEvents') || '[]');
 
     events.forEach(event => {
-        const eventDate = new Date(event.time);
-
-        // New event notification
-        if (!seenEventIds.includes(event.id)) {
-            notifications.push({
-                title: `New Event: ${event.name}`,
-                time: 'Just added'
-            });
-            seenEventIds.push(event.id);
+        const ed = new Date(event.time);
+        if (!seenIds.includes(event.id)) {
+            notifications.push({ title: `New Event: ${event.name}`, time: 'Just added' });
+            seenIds.push(event.id);
         }
-
-        // Reminder for tomorrow
-        if (
-            eventDate.getDate() === tomorrow.getDate() &&
-            eventDate.getMonth() === tomorrow.getMonth() &&
-            eventDate.getFullYear() === tomorrow.getFullYear()
-        ) {
-            notifications.push({
-                title: `Reminder: ${event.name} is tomorrow`,
-                time: eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            });
+        if (ed.getDate() === tomorrow.getDate() && ed.getMonth() === tomorrow.getMonth() && ed.getFullYear() === tomorrow.getFullYear()) {
+            notifications.push({ title: `Reminder: ${event.name} is tomorrow`, time: ed.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }) });
         }
     });
-
-    localStorage.setItem('seenEvents', JSON.stringify(seenEventIds));
+    localStorage.setItem('seenEvents', JSON.stringify(seenIds));
 
     if (notifications.length === 0) {
-        const empty = document.createElement('div');
-        empty.className = 'notification-item';
-        empty.innerHTML = `<div class="notification-title">No new notifications</div>`;
-        dropdown.appendChild(empty);
+        const el = document.createElement('div');
+        el.className = 'notification-item';
+        el.innerHTML = '<div class="notification-title">No new notifications</div>';
+        dropdown.appendChild(el);
+        return;
+    }
+    notifications.forEach(n => {
+        const el = document.createElement('div');
+        el.className = 'notification-item';
+        el.innerHTML = `<div class="notification-title">${n.title}</div><div class="notification-time">${n.time}</div>`;
+        dropdown.appendChild(el);
+    });
+}
+
+// ── Upcoming list ──
+function populateEventList(events) {
+    const container = document.getElementById('calendarEventsList');
+    const upcoming  = events.filter(e => new Date(e.time) >= new Date()).sort((a, b) => new Date(a.time) - new Date(b.time));
+
+    container.innerHTML = '<h3>Upcoming Events</h3>';
+
+    if (upcoming.length === 0) {
+        container.innerHTML += '<p class="no-upcoming">No upcoming events yet</p>';
         return;
     }
 
-    notifications.forEach(n => {
-        const item = document.createElement('div');
-        item.className = 'notification-item';
-        item.innerHTML = `
-            <div class="notification-title">${n.title}</div>
-            <div class="notification-time">${n.time}</div>
-        `;
-        dropdown.appendChild(item);
-    });
-}
-
-function populateEventList(events) {
-    const container = document.querySelector('.calendar-events-list');
-
-    const upcoming = events
-        .filter(e => new Date(e.time) >= new Date())
-        .sort((a, b) => new Date(a.time) - new Date(b.time));
-
-    container.innerHTML = `<h3>Upcoming Events</h3>`;
-
     upcoming.forEach(event => {
-        const date = new Date(event.time);
-
+        const d = new Date(event.time);
         container.innerHTML += `
-    <div class="event-list-item"
-         onclick="goToEvent('${event.time}')">
-        <div class="event-date">
-            ${date.toLocaleDateString('en-IN', { month:'short', day:'numeric' })}
-        </div>
-        <div class="event-info-cal">
-            <div class="event-name-cal">${event.name}</div>
-            <div class="event-time-cal">
-                ${date.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}
-            </div>
-        </div>
-    </div>
-`;
-
+            <div class="event-list-item" onclick="goToEvent('${event.time}')">
+                <div class="event-date">${d.toLocaleDateString('en-IN', { month:'short', day:'numeric' })}</div>
+                <div class="event-info-cal">
+                    <div class="event-name-cal">${event.name}</div>
+                    <div class="event-time-cal">${d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })}</div>
+                </div>
+            </div>`;
     });
 }
 
+// ── Tooltips ──
 function addTooltips() {
     document.querySelectorAll('.event-day').forEach(day => {
         day.addEventListener('mouseenter', function() {
+            if (!this.dataset.events) return;
             const tooltip = document.createElement('div');
             tooltip.className = 'event-tooltip';
             tooltip.textContent = this.dataset.events;
             document.body.appendChild(tooltip);
-
             const rect = this.getBoundingClientRect();
-
-            let top = rect.top - tooltip.offsetHeight - 10;
-            let left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2);
-
-            // If too close to top → show below instead
-            if (top < 10) {
-                top = rect.bottom + 10;
-            }
-
-            // Prevent overflow left
-            if (left < 10) {
-                left = 10;
-            }
-
-            // Prevent overflow right
-            if (left + tooltip.offsetWidth > window.innerWidth - 10) {
-                left = window.innerWidth - tooltip.offsetWidth - 10;
-            }
-
+            let top  = rect.top - tooltip.offsetHeight - 10;
+            let left = rect.left + rect.width / 2 - tooltip.offsetWidth / 2;
+            if (top < 10) top = rect.bottom + 10;
+            if (left < 10) left = 10;
+            if (left + tooltip.offsetWidth > window.innerWidth - 10) left = window.innerWidth - tooltip.offsetWidth - 10;
             tooltip.style.position = 'fixed';
-            tooltip.style.top = top + 'px';
+            tooltip.style.top  = top + 'px';
             tooltip.style.left = left + 'px';
         });
-
-        day.addEventListener('mouseleave', function() {
-            const tooltip = document.querySelector('.event-tooltip');
-            if (tooltip) tooltip.remove();
+        day.addEventListener('mouseleave', () => {
+            const t = document.querySelector('.event-tooltip');
+            if (t) t.remove();
         });
     });
 }
 
-
-/* Month Navigation */
+// ── Month nav ──
 document.getElementById('prevMonth').addEventListener('click', () => {
-    const title = document.getElementById('calendarTitle');
-    title.classList.remove('slide-left');
-    title.classList.add('slide-right');
-
+    const t = document.getElementById('calendarTitle');
+    t.classList.remove('slide-left'); t.classList.add('slide-right');
     currentDate.setMonth(currentDate.getMonth() - 1);
-    renderCalendar();
-
-    setTimeout(() => title.classList.remove('slide-right'), 350);
+    loadCalendar(); // reload from backend for new month
+    setTimeout(() => t.classList.remove('slide-right'), 350);
 });
-
 document.getElementById('nextMonth').addEventListener('click', () => {
-    const title = document.getElementById('calendarTitle');
-    title.classList.remove('slide-right');
-    title.classList.add('slide-left');
-
+    const t = document.getElementById('calendarTitle');
+    t.classList.remove('slide-right'); t.classList.add('slide-left');
     currentDate.setMonth(currentDate.getMonth() + 1);
-    renderCalendar();
-
-    setTimeout(() => title.classList.remove('slide-left'), 350);
+    loadCalendar(); // reload from backend for new month
+    setTimeout(() => t.classList.remove('slide-left'), 350);
 });
 
+// ── Register for event from calendar ──
+async function calendarRegister(eventId, btn) {
+    try {
+        const res = await fetch(`${API_BASE}/api/cart/${eventId}`, { method: 'POST' });
+        if (res.status === 401) {
+            alert('Please verify your SRM email first!');
+            window.location.href = 'authentication.html';
+            return;
+        }
+        if (res.ok) {
+            btn.textContent = '✓ Joined';
+            btn.classList.add('registered');
+            btn.disabled = true;
+            myRegisteredIds.push(eventId);
+        } else {
+            const data = await res.json();
+            alert(data.error || 'Failed to register');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Network error');
+    }
+}
 
 loadCalendar();
-loadEvents();
 </script>
 
 

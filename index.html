@@ -3,52 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Hive - The Hive of Buzzing Events</title>
+    <title>Event Hive — The Hive of Buzzing Events</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <!-- Top Navigation Bar -->
     <nav class="top-bar">
         <div class="nav-container">
-            <div class="logo">🐝 Event Hive</div>
+            <a href="index.html" class="logo">⬡ Event Hive</a>
             <div class="nav-right">
+                <a href="about.html" class="nav-link">About ℹ️</a>
+                <a href="calendar.html" class="nav-link">📅 Calendar</a>
+                <a href="cart.html" class="nav-link">🛒 My Events</a>
+                <a href="profile.html" class="nav-link">👤 Profile</a>
                 <div class="notification-container">
                     <button class="notification-btn" onclick="toggleNotifications()">🔔</button>
                     <div class="notification-dropdown" id="notificationDropdown">
                         <div class="notification-header">Notifications</div>
-                        <div class="notification-item">
-                            <div class="notification-title">New Event: Dance Competition</div>
-                            <div class="notification-time">2 hours ago</div>
-                        </div>
-                        <div class="notification-item">
-                            <div class="notification-title">Registration Open: Art Exhibition</div>
-                            <div class="notification-time">5 hours ago</div>
-                        </div>
-                        <div class="notification-item">
-                            <div class="notification-title">Reminder: Sports Day Tomorrow</div>
-                            <div class="notification-time">1 day ago</div>
-                        </div>
-                        <div class="notification-item">
-                            <div class="notification-title">Music Festival Tickets Available</div>
-                            <div class="notification-time">2 days ago</div>
-                        </div>
                     </div>
                 </div>
-                <a href="calendar.html" class="calendar-btn">📅 Event Calendar</a>
             </div>
         </div>
     </nav>
 
     <!-- Hero Section -->
     <section class="hero-section">
-        <div class="beehive-bg">
-            <div class="hexagon hex1"></div>
-            <div class="hexagon hex2"></div>
-            <div class="hexagon hex3"></div>
-            <div class="hexagon hex4"></div>
-            <div class="hexagon hex5"></div>
-            <div class="hexagon hex6"></div>
-        </div>
+        <!-- Antigravity particle canvas -->
+        <canvas id="particleCanvas" class="particle-canvas"></canvas>
+        <!-- Ambient glow layers -->
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
         <div class="hero-content">
             <h1 class="main-title">EVENT HIVE</h1>
             <p class="subtitle">the hive of buzzing events</p>
@@ -58,12 +46,37 @@
         </div>
     </section>
 
+    <!-- CTA Cards Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-grid">
+                <div class="cta-card">
+                    <div class="cta-icon">🎯</div>
+                    <h3>Host Your Event</h3>
+                    <p>Got something exciting? Register your event in under 2 minutes and reach hundreds of students.</p>
+                    <a href="register.html" class="cta-link">Register Now →</a>
+                </div>
+                <div class="cta-card">
+                    <div class="cta-icon">📅</div>
+                    <h3>Never Miss Out</h3>
+                    <p>Browse the calendar, see what's occupied, and plan your schedule around the buzz.</p>
+                    <a href="calendar.html" class="cta-link">View Calendar →</a>
+                </div>
+                <div class="cta-card">
+                    <div class="cta-icon">⚡</div>
+                    <h3>One-Click Entry</h3>
+                    <p>Find an event you love? Hit the arrow on any card below and you're in — zero friction.</p>
+                    <a href="#eventsGrid" class="cta-link">Scroll down ↓</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Events Section -->
     <section class="events-section">
         <div class="container">
             <div class="section-header">
                 <h2>Discover Events</h2>
-                <a href="register.html" class="register-link">Want to register an event? →</a>
             </div>
 
             <!-- Filters and Sort -->
@@ -153,11 +166,15 @@
       <div class="event-details">
         <span class="event-price">₹${event.price}</span>
         <span class="event-time">${formatDateTime(event.time)}</span>
+        <button class="event-register-btn" data-event-id="${event.id}" onclick="event.stopPropagation(); registerForEvent(${event.id}, this)">+ Register</button>
       </div>
     </div>
 
   </div>
 `).join('');
+
+            // Mark already-registered events
+            markRegistered();
         }
         function updateNotifications(events) {
     const dropdown = document.getElementById('notificationDropdown');
@@ -261,6 +278,258 @@
 
         // Load events on page load
         loadEvents();
+
+        // ===== Cart Registration =====
+        async function registerForEvent(eventId, btn) {
+            try {
+                const res = await fetch(`${API_BASE}/api/cart/${eventId}`, { method: 'POST' });
+                if (res.status === 401) {
+                    alert('Please verify your SRM email first!');
+                    window.location.href = 'authentication.html';
+                    return;
+                }
+                if (res.ok) {
+                    btn.textContent = '✓ Registered';
+                    btn.classList.add('registered');
+                } else {
+                    const data = await res.json();
+                    alert(data.error || 'Failed to register');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Network error');
+            }
+        }
+
+        async function markRegistered() {
+            try {
+                const res = await fetch(`${API_BASE}/api/cart`);
+                if (!res.ok) return;
+                const cart = await res.json();
+                const ids = cart.map(e => e.event_id);
+                document.querySelectorAll('.event-register-btn').forEach(btn => {
+                    if (ids.includes(Number(btn.dataset.eventId))) {
+                        btn.textContent = '✓ Registered';
+                        btn.classList.add('registered');
+                    }
+                });
+            } catch (e) { /* not logged in, ignore */ }
+        }
+
+        // ===== ReactBits Antigravity-style Particle Background =====
+        (function initAntigravity() {
+            const canvas = document.getElementById('particleCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            // --- Config (matching ReactBits Antigravity defaults, adapted colors) ---
+            const CONFIG = {
+                count: 300,
+                magnetRadius: 180,      // px – how far the ring effect reaches
+                ringRadius: 120,         // px – radius of the formed ring
+                waveSpeed: 0.4,
+                waveAmplitude: 1,
+                particleSize: 1.5,
+                particleVariance: 1,
+                lerpSpeed: 0.05,
+                color: { r: 245, g: 166, b: 35 },   // honey amber (#f5a623)
+                autoAnimate: true,
+                rotationSpeed: 0.0005,
+                depthFactor: 1,
+                pulseSpeed: 3,
+                fieldStrength: 10,
+                shape: 'capsule'         // capsule | circle
+            };
+
+            let w, h, particles, time = 0;
+            const mouse = { x: -9999, y: -9999, active: false };
+            const smoothMouse = { x: -9999, y: -9999 };
+
+            function resize() {
+                const hero = canvas.parentElement;
+                w = canvas.width = hero.offsetWidth;
+                h = canvas.height = hero.offsetHeight;
+            }
+
+            canvas.addEventListener('mousemove', e => {
+                const rect = canvas.getBoundingClientRect();
+                mouse.x = e.clientX - rect.left;
+                mouse.y = e.clientY - rect.top;
+                mouse.active = true;
+            });
+            canvas.addEventListener('mouseleave', () => {
+                mouse.active = false;
+            });
+
+            class Particle {
+                constructor(i, total) {
+                    this.index = i;
+                    this.total = total;
+                    // distribute particles randomly
+                    this.homeX = Math.random() * w;
+                    this.homeY = Math.random() * h;
+                    this.x = this.homeX;
+                    this.y = this.homeY;
+                    this.vx = (Math.random() - 0.5) * 0.8;
+                    this.vy = (Math.random() - 0.5) * 0.8;
+                    this.baseSize = (0.5 + Math.random() * CONFIG.particleVariance) * CONFIG.particleSize;
+                    this.size = this.baseSize;
+                    this.angle = (i / total) * Math.PI * 2;
+                    this.depth = 0.4 + Math.random() * 0.6;  // z-depth for 3D feel
+                    this.rotation = Math.random() * Math.PI * 2;
+                    this.rotSpeed = (Math.random() - 0.5) * 0.04;
+                    this.opacity = 0.3 + Math.random() * 0.5;
+                    this.targetX = this.x;
+                    this.targetY = this.y;
+                }
+
+                update(time) {
+                    const { magnetRadius, ringRadius, lerpSpeed, waveSpeed,
+                            waveAmplitude, fieldStrength, rotationSpeed,
+                            depthFactor, pulseSpeed } = CONFIG;
+
+                    const mx = smoothMouse.x;
+                    const my = smoothMouse.y;
+                    const dx = this.x - mx;
+                    const dy = this.y - my;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (mouse.active && dist < magnetRadius * 2.5) {
+                        // target position on ring
+                        const ringAngle = this.angle + time * rotationSpeed * 60 +
+                                          Math.sin(time * waveSpeed + this.index * 0.1) * waveAmplitude * 0.3;
+                        const wavyRadius = ringRadius +
+                                           Math.sin(time * waveSpeed * 2 + this.index * 0.2) * waveAmplitude * 8;
+                        const depthZ = Math.sin(ringAngle + time * 0.3) * depthFactor * 0.3;
+
+                        this.targetX = mx + Math.cos(ringAngle) * wavyRadius * (1 + depthZ);
+                        this.targetY = my + Math.sin(ringAngle) * wavyRadius * (1 + depthZ);
+
+                        // attraction strength based on distance
+                        const pull = Math.max(0, 1 - dist / (magnetRadius * 2.5));
+                        const strength = pull * pull * (fieldStrength / 10);
+                        const lerp = lerpSpeed * strength;
+
+                        this.x += (this.targetX - this.x) * lerp;
+                        this.y += (this.targetY - this.y) * lerp;
+
+                        // depth-based size
+                        this.size = this.baseSize * (0.6 + (1 + depthZ) * 0.4) *
+                                    (1 + Math.sin(time * pulseSpeed + this.index) * 0.15);
+                        this.opacity = 0.4 + pull * 0.5;
+                    } else {
+                        // free-float drift
+                        this.vx += (Math.random() - 0.5) * 0.02;
+                        this.vy += (Math.random() - 0.5) * 0.02;
+                        this.vx *= 0.98;
+                        this.vy *= 0.98;
+                        this.x += this.vx;
+                        this.y += this.vy;
+
+                        // wrap edges
+                        if (this.x < -20) this.x = w + 20;
+                        if (this.x > w + 20) this.x = -20;
+                        if (this.y < -20) this.y = h + 20;
+                        if (this.y > h + 20) this.y = -20;
+
+                        this.size = this.baseSize * (1 + Math.sin(time * pulseSpeed * 0.5 + this.index) * 0.1);
+                        this.opacity = 0.2 + this.depth * 0.3;
+                    }
+
+                    this.rotation += this.rotSpeed;
+                }
+
+                draw(ctx) {
+                    const { r, g, b } = CONFIG.color;
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.rotate(this.rotation);
+                    ctx.globalAlpha = this.opacity;
+
+                    if (CONFIG.shape === 'capsule') {
+                        // draw capsule (rounded rectangle)
+                        const cw = this.size * 1.2;
+                        const ch = this.size * 3.2;
+                        const cr = cw / 2;
+                        ctx.beginPath();
+                        ctx.moveTo(-cw / 2, -ch / 2 + cr);
+                        ctx.arcTo(-cw / 2, -ch / 2, cw / 2, -ch / 2, cr);
+                        ctx.arcTo(cw / 2, -ch / 2, cw / 2, ch / 2, cr);
+                        ctx.arcTo(cw / 2, ch / 2, -cw / 2, ch / 2, cr);
+                        ctx.arcTo(-cw / 2, ch / 2, -cw / 2, -ch / 2, cr);
+                        ctx.closePath();
+                        ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+                        ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.6)`;
+                        ctx.shadowBlur = 6;
+                        ctx.fill();
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+                        ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.6)`;
+                        ctx.shadowBlur = 6;
+                        ctx.fill();
+                    }
+
+                    ctx.restore();
+                }
+            }
+
+            function init() {
+                resize();
+                particles = [];
+                for (let i = 0; i < CONFIG.count; i++) {
+                    particles.push(new Particle(i, CONFIG.count));
+                }
+            }
+
+            // auto-animate: circle that orbits the center when mouse is idle
+            let autoTime = 0;
+            function getAutoAnimatePos(t) {
+                const cx = w / 2;
+                const cy = h / 2;
+                const rx = w * 0.18;
+                const ry = h * 0.15;
+                return {
+                    x: cx + Math.cos(t * 0.3) * rx,
+                    y: cy + Math.sin(t * 0.3) * ry
+                };
+            }
+
+            function animate(ts) {
+                time = ts * 0.001;
+                ctx.clearRect(0, 0, w, h);
+
+                // smooth mouse position
+                if (mouse.active) {
+                    smoothMouse.x += (mouse.x - smoothMouse.x) * 0.08;
+                    smoothMouse.y += (mouse.y - smoothMouse.y) * 0.08;
+                } else if (CONFIG.autoAnimate) {
+                    autoTime += 0.016;
+                    const auto = getAutoAnimatePos(autoTime);
+                    smoothMouse.x += (auto.x - smoothMouse.x) * 0.02;
+                    smoothMouse.y += (auto.y - smoothMouse.y) * 0.02;
+                    mouse.active = true; // temporarily enable for auto-animation
+                    particles.forEach(p => p.update(time));
+                    particles.forEach(p => p.draw(ctx));
+                    mouse.active = false;
+                    requestAnimationFrame(animate);
+                    return;
+                } else {
+                    smoothMouse.x = -9999;
+                    smoothMouse.y = -9999;
+                }
+
+                particles.forEach(p => p.update(time));
+                particles.forEach(p => p.draw(ctx));
+
+                requestAnimationFrame(animate);
+            }
+
+            window.addEventListener('resize', resize);
+            init();
+            requestAnimationFrame(animate);
+        })();
     </script>
 </body>
 </html>

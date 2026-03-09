@@ -15,7 +15,6 @@
         <div class="nav-container">
             <a href="index.html" class="logo">⬡ Event Hive</a>
             <div class="nav-right">
-                <a href="about.html" class="nav-link">About ℹ️</a>
                 <a href="calendar.html" class="nav-link">📅 Calendar</a>
                 <a href="cart.html" class="nav-link">🛒 My Events</a>
                 <a href="profile.html" class="nav-link">👤 Profile</a>
@@ -54,7 +53,7 @@
                     <div class="cta-icon">🎯</div>
                     <h3>Host Your Event</h3>
                     <p>Got something exciting? Register your event in under 2 minutes and reach hundreds of students.</p>
-                    <a href="register.html" class="cta-link">Register Now →</a>
+                    <a href="register.html" class="cta-link">Host Now →</a>
                 </div>
                 <div class="cta-card">
                     <div class="cta-icon">📅</div>
@@ -110,6 +109,18 @@
 
     <script>
         const API_BASE = window.location.origin;
+
+        // Redirect to sign in if not logged in
+        async function ensureSignedIn() {
+            try {
+                const res = await fetch(`${API_BASE}/api/me`);
+                if (res.status === 401) {
+                    window.location.href = 'authentication.html';
+                }
+            } catch (e) {
+                // ignore
+            }
+        }
 
         // Load events from MySQL backend (and sync to data/events.json on server)
         async function loadEvents() {
@@ -276,8 +287,8 @@
             }
         });
 
-        // Load events on page load
-        loadEvents();
+        // Load events on page load (redirect to sign-in if not authenticated)
+        ensureSignedIn().then(loadEvents);
 
         // ===== Cart Registration =====
         async function registerForEvent(eventId, btn) {

@@ -102,7 +102,35 @@
       text-align: center;
       font-size: 13px;
       color: var(--text-muted);
-      margin-bottom: 28px;
+      margin-bottom: 18px;
+    }
+
+    .auth-mode-toggle {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(22, 24, 30, 0.7);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 700;
+      transition: 0.2s;
+    }
+
+    .mode-btn.active {
+      background: rgba(245, 166, 35, 0.15);
+      border-color: rgba(245, 166, 35, 0.4);
+    }
+
+    .mode-btn:hover {
+      background: rgba(245, 166, 35, 0.1);
     }
 
     .input-group {
@@ -214,15 +242,28 @@
 <body>
 
 <div class="auth-card">
-  <h2>⬡ Verify Your Email</h2>
-  <p class="auth-subtitle">Enter your SRM email to receive OTP</p>
+  <h2>⬡ Sign in to Event Hive</h2>
+  <p class="auth-subtitle">Choose how to sign in: student (OTP) or admin (password).</p>
+
+  <div class="auth-mode-toggle">
+    <button type="button" class="mode-btn active" id="modeStudentBtn">Student</button>
+    <button type="button" class="mode-btn" id="modeAdminBtn">Admin</button>
+  </div>
 
   <div class="input-group">
     <input type="email" id="email" placeholder="yourname@srmist.edu.in">
   </div>
 
+  <div class="input-group" id="adminPasswordGroup" style="display:none;">
+    <input type="password" id="adminPassword" placeholder="Admin password">
+  </div>
+
   <button class="auth-btn" id="sendBtn" onclick="sendOtp()">
     Send OTP
+  </button>
+
+  <button class="auth-btn" id="adminBtn" onclick="adminLogin()" style="display:none; margin-top: 12px;">
+    Login as Admin
   </button>
 
   <div class="otp-section" id="otpSection">
@@ -240,8 +281,32 @@
 
 <script>
 const otpSection = document.getElementById('otpSection');
+const modeStudentBtn = document.getElementById('modeStudentBtn');
+const modeAdminBtn = document.getElementById('modeAdminBtn');
+const adminPasswordGroup = document.getElementById('adminPasswordGroup');
+const adminBtn = document.getElementById('adminBtn');
+let authMode = 'student';
+
+function setAuthMode(mode) {
+  authMode = mode;
+  modeStudentBtn.classList.toggle('active', mode === 'student');
+  modeAdminBtn.classList.toggle('active', mode === 'admin');
+  otpSection.classList.toggle('active', mode === 'student');
+  adminPasswordGroup.style.display = mode === 'admin' ? 'block' : 'none';
+  document.getElementById('sendBtn').style.display = mode === 'student' ? 'block' : 'none';
+  adminBtn.style.display = mode === 'admin' ? 'block' : 'none';
+}
+
+modeStudentBtn.addEventListener('click', () => setAuthMode('student'));
+modeAdminBtn.addEventListener('click', () => setAuthMode('admin'));
+
+setAuthMode('student');
 
 async function sendOtp() {
+  if (authMode !== 'student') {
+    return adminLogin();
+  }
+
   const email = document.getElementById('email').value;
   const button = document.getElementById('sendBtn');
 
@@ -269,6 +334,39 @@ async function sendOtp() {
   }
 }
 
+async function adminLogin() {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('adminPassword').value;
+  const button = document.getElementById('adminBtn');
+
+  if (!email || !password) {
+    button.classList.add('shake');
+    setTimeout(() => button.classList.remove('shake'), 400);
+    return;
+  }
+
+  button.classList.add('loading');
+  try {
+    const res = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      window.location.href = 'admin.html';
+    } else {
+      alert(data.error || 'Invalid credentials');
+    }
+  } catch (err) {
+    console.error('Admin login error:', err);
+    alert('Network error');
+  } finally {
+    button.classList.remove('loading');
+  }
+}
+
 async function verifyOtp() {
   const email = document.getElementById('email').value;
   const otp = document.getElementById('otp').value;
@@ -292,38 +390,58 @@ async function verifyOtp() {
   button.classList.remove('loading');
 
   if (res.ok) {
+    const meta = JSON.parse(sessionStorage.getItem('pendingEventMeta'));
+    const imageBase64 = sessionStorage.getItem('pendingEventImage');
 
-  const meta = JSON.parse(sessionStorage.getItem('pendingEventMeta'));
-  const imageBase64 = sessionStorage.getItem('pendingEventImage');
+    if (meta) {
+      const formData = new FormData();
+      Object.keys(meta).forEach(key => {
+        formData.append(key, meta[key]);
+      });
 
-  if (meta) {
-    const formData = new FormData();
+      if (imageBase64) {
+        const blob = await fetch(imageBase64).then(r => r.blob());
+        formData.append('image', blob, 'upload.png');
+      }
 
-    Object.keys(meta).forEach(key => {
-      formData.append(key, meta[key]);
-    });
+      await fetch('/api/events', {
+        method: 'POST',
+        body: formData
+      });
 
-    if (imageBase64) {
-      const blob = await fetch(imageBase64).then(r => r.blob());
-      formData.append('image', blob, 'upload.png');
+      sessionStorage.removeItem('pendingEventMeta');
+      sessionStorage.removeItem('pendingEventImage');
     }
 
-    await fetch('/api/events', {
-      method: 'POST',
-      body: formData
-    });
+    // Redirect based on whether this user is an admin
+    if (data.isAdmin) {
+      window.location.href = 'admin.html';
+    } else {
+      window.location.href = 'index.html';
+    }
 
-    sessionStorage.removeItem('pendingEventMeta');
-    sessionStorage.removeItem('pendingEventImage');
+  } else {
+    alert(data.error);
   }
 
-  window.location.href = 'index.html';
-
-} else {
-  alert(data.error);
 }
 
+async function initAuthPage() {
+  try {
+    const res = await fetch('/api/me');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.isAdmin) {
+      window.location.href = 'admin.html';
+    } else {
+      window.location.href = 'index.html';
+    }
+  } catch {
+    // ignore
+  }
 }
+
+initAuthPage();
 </script>
 
 </body>

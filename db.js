@@ -43,6 +43,16 @@ async function initDb() {
     )
   `);
 
+  // Admins table (email/password login for admin dashboard)
+  await conn.query(`
+    CREATE TABLE IF NOT EXISTS admins (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      email VARCHAR(255) NOT NULL UNIQUE,
+      password VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Events table (with registration_link + created_by)
   await conn.query(`
     CREATE TABLE IF NOT EXISTS events (

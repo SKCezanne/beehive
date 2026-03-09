@@ -16,7 +16,6 @@
   <div class="nav-container">
     <a href="index.html" class="logo">⬡ Event Hive</a>
     <div class="nav-right">
-      <a href="about.html" class="nav-link">About ℹ️</a>
       <a href="calendar.html" class="nav-link">📅 Calendar</a>
       <a href="cart.html" class="nav-link">🛒 My Events</a>
       <a href="profile.html" class="nav-link nav-link--active">👤 Profile</a>
@@ -247,9 +246,7 @@ async function loadProfile() {
   try {
     const res = await fetch('/api/profile');
     if (res.status === 401) {
-      // Not logged in — show message
-      document.getElementById('displayName').textContent = 'Not logged in';
-      document.getElementById('displayEmail').textContent = 'Verify your email to save your profile';
+      window.location.href = 'authentication.html';
       return;
     }
     if (!res.ok) return;
@@ -317,9 +314,7 @@ document.getElementById('profileForm').addEventListener('submit', async e => {
     const res = await fetch('/api/profile', { method: 'POST', body: formData });
 
     if (res.status === 401) {
-      status.textContent = 'Please log in first';
-      status.classList.add('error');
-      setTimeout(() => { window.location.href = 'authentication.html'; }, 1500);
+      window.location.href = 'authentication.html';
       return;
     }
 
@@ -395,7 +390,7 @@ async function loadMyEvents() {
   try {
     const res = await fetch('/api/my-events');
     if (res.status === 401) {
-      grid.innerHTML = '<p class="my-events-empty">Log in to see your posted events.</p>';
+      window.location.href = 'authentication.html';
       return;
     }
     if (!res.ok) throw new Error('Failed');
@@ -433,7 +428,6 @@ async function loadMyEvents() {
           </div>
           <button class="my-event-delete-btn" onclick="deleteMyEvent(${ev.id})" title="Delete event">🗑️</button>
         </div>`;
-    }).join('');
     }).join('');
   } catch (err) {
     console.error('My events error:', err);

@@ -43,7 +43,7 @@ app.use('/api/calendar', calendarRoutes);  // /api/calendar/:year/:month
 app.use('/api',          userRoutes);      // /api/my-events, /api/my-registrations
 
 /* ================ FRONTEND ================ */
-app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'authentication.html')));
 
 /* ================ ERROR HANDLER ================ */
 app.use(errorHandler);

@@ -1,8 +1,20 @@
 const router = require('express').Router();
 const { getPool }      = require('../db');
-const { requireAuth }  = require('../middleware/auth');
+const { requireAuth, requireAdmin }  = require('../middleware/auth');
 const { upload }       = require('../middleware/upload');
 const { writeEventsJson } = require('../storage');
+
+async function isAdminUser(req) {
+  if (req.session?.isAdmin) return true;
+  if (!req.session?.user) return false;
+  const pool = await getPool();
+  const [rows] = await pool.query('SELECT 1 FROM admins WHERE email = ? LIMIT 1', [req.session.user.email]);
+  if (rows.length) {
+    req.session.isAdmin = true;
+    return true;
+  }
+  return false;
+}
 
 /* ---------- helper: sync DB rows → JSON file ---------- */
 async function syncEventsToJson(events) {
@@ -94,18 +106,70 @@ router.get('/:id', async (req, res) => {
 });
 
 /* ====================================================
-   DELETE /api/events/:id — delete own event
+   GET /api/events/admin — admin event overview
+   ==================================================== */
+router.get('/admin', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const pool = await getPool();
+    const [rows] = await pool.query(
+      `SELECT e.id, e.name, e.description, e.category, e.price, e.time, e.image, e.registration_link,
+              e.created_by, e.created_at,
+              (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS registration_count
+       FROM events e
+       ORDER BY e.time ASC`,
+    );
+
+    const events = rows.map(row => ({
+      id:                 row.id,
+      name:               row.name,
+      description:        row.description,
+      category:           row.category,
+      price:              row.price,
+      time:               row.time ? new Date(row.time).toISOString().slice(0, 16) : null,
+      image:              row.image || null,
+      registration_link:  row.registration_link || null,
+      created_by:         row.created_by || null,
+      created_at:         row.created_at,
+      registration_count: row.registration_count,
+    }));
+
+    res.json(events);
+  } catch (err) {
+    console.error('GET admin events error:', err);
+    res.status(500).json({ error: 'Failed to fetch events' });
+  }
+});
+
+/* ====================================================
+   DELETE /api/events/:id — delete event (creator or admin)
    ==================================================== */
 router.delete('/:id', requireAuth, async (req, res) => {
   try {
     const pool = await getPool();
-    const [result] = await pool.query(
-      `DELETE FROM events WHERE id = ? AND created_by = ?`,
-      [req.params.id, req.session.user.email],
-    );
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Event not found or not yours' });
+    const eventId = req.params.id;
+    const userEmail = req.session.user.email;
+
+    const [evRows] = await pool.query('SELECT created_by FROM events WHERE id = ?', [eventId]);
+    if (!evRows.length) return res.status(404).json({ error: 'Event not found' });
+    const createdBy = evRows[0].created_by;
+
+    // Allow deletion for the creator or an admin
+    if (createdBy !== userEmail && !(await isAdminUser(req))) {
+      return res.status(403).json({ error: 'Only the event creator or an admin can delete this event' });
     }
+
+    const [result] = await pool.query('DELETE FROM events WHERE id = ?', [eventId]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Sync JSON cache
+    const [rows] = await pool.query(
+      `SELECT id, name, description, category, price, time, image, registration_link
+       FROM events ORDER BY time ASC`,
+    );
+    await syncEventsToJson(rows.map(formatEvent));
+
     res.json({ message: 'Event deleted' });
   } catch (err) {
     console.error('DELETE event error:', err);
@@ -131,17 +195,20 @@ router.get('/:id/registrations', async (req, res) => {
 });
 
 /* ====================================================
-   GET /api/events/:id/students — registered students (creator only)
+   GET /api/events/:id/students — registered students (creator or admin)
    ==================================================== */
 router.get('/:id/students', requireAuth, async (req, res) => {
   try {
     const pool    = await getPool();
     const eventId = req.params.id;
+    const userEmail = req.session.user.email;
 
     const [evRows] = await pool.query('SELECT created_by FROM events WHERE id = ?', [eventId]);
     if (!evRows.length) return res.status(404).json({ error: 'Event not found' });
-    if (evRows[0].created_by !== req.session.user.email) {
-      return res.status(403).json({ error: 'Only the event creator can view registered students' });
+    const createdBy = evRows[0].created_by;
+
+    if (createdBy !== userEmail && !(await isAdminUser(req))) {
+      return res.status(403).json({ error: 'Only the event creator or an admin can view registered students' });
     }
 
     const [rows] = await pool.query(

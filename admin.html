@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Event Hive</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="top-bar">
+    <div class="nav-container">
+      <a href="index.html" class="logo">⬡ Event Hive</a>
+      <div class="nav-right">
+        <a href="calendar.html" class="nav-link">📅 Calendar</a>
+        <a href="cart.html" class="nav-link">🛒 My Events</a>
+        <a href="profile.html" class="nav-link">👤 Profile</a>
+        <a href="admin.html" class="nav-link nav-link--active">🛠️ Admin</a>
+        <div class="notification-container">
+          <button class="notification-btn" onclick="toggleNotifications()">🔔</button>
+          <div class="notification-dropdown" id="notificationDropdown">
+            <div class="notification-header">Notifications</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <section class="admin-section">
+    <div class="container">
+      <h1 class="section-title">Admin Panel</h1>
+      <p class="section-subtitle">View all events, see who created them, who has joined, and delete events if needed.</p>
+
+      <div id="adminMessage" class="admin-message"></div>
+
+      <div class="admin-controls">
+        <button class="button" id="refreshBtn">Refresh</button>
+      </div>
+
+      <div class="admin-table-wrapper">
+        <table class="admin-table" id="eventsTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Date</th>
+              <th>Created By</th>
+              <th>Registrations</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="eventsTbody"></tbody>
+        </table>
+      </div>
+
+      <div class="admin-details" id="detailsPanel" hidden>
+        <h2>Registrations</h2>
+        <div id="detailsContent"></div>
+        <button class="button" id="closeDetails">Close</button>
+      </div>
+
+    </div>
+  </section>
+
+  <script>
+    const API_BASE = window.location.origin;
+
+    function toggleNotifications() {
+      const dropdown = document.getElementById('notificationDropdown');
+      dropdown.classList.toggle('show');
+    }
+
+    window.addEventListener('click', function(e) {
+      if (!e.target.matches('.notification-btn')) {
+        const dropdown = document.getElementById('notificationDropdown');
+        if (dropdown.classList.contains('show')) {
+          dropdown.classList.remove('show');
+        }
+      }
+    });
+
+    async function fetchAdminEvents() {
+      const resp = await fetch(`${API_BASE}/api/events/admin`);
+      if (!resp.ok) throw resp;
+      return resp.json();
+    }
+
+    function showMessage(message, type = 'info') {
+      const el = document.getElementById('adminMessage');
+      el.textContent = message;
+      el.className = `admin-message admin-message--${type}`;
+    }
+
+    function clearMessage() {
+      const el = document.getElementById('adminMessage');
+      el.textContent = '';
+      el.className = 'admin-message';
+    }
+
+    function formatDateTime(dateString) {
+      if (!dateString) return '-';
+      const date = new Date(dateString);
+      return date.toLocaleString('en-IN', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function buildTable(events) {
+      const tbody = document.getElementById('eventsTbody');
+      tbody.innerHTML = '';
+
+      if (!events.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-row">No events found.</td></tr>';
+        return;
+      }
+
+      events.forEach(event => {
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+          <td>${event.id}</td>
+          <td>${event.name}</td>
+          <td>${event.category}</td>
+          <td>${formatDateTime(event.time)}</td>
+          <td>${event.created_by || '-'}</td>
+          <td>${event.registration_count ?? 0}</td>
+          <td class="admin-actions">
+            <button class="button button--small" data-event-id="${event.id}" data-action="view">View</button>
+            <button class="button button--small button--danger" data-event-id="${event.id}" data-action="delete">Delete</button>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function loadAdmin() {
+      clearMessage();
+      try {
+        const events = await fetchAdminEvents();
+        buildTable(events);
+      } catch (err) {
+        if (err.status === 401) {
+          window.location.href = 'authentication.html';
+          return;
+        }
+        if (err.status === 403) {
+          window.location.href = 'index.html';
+          return;
+        }
+        showMessage('Failed to load events. Check that the backend is running.', 'error');
+        console.error(err);
+      }
+    }
+
+    async function deleteEvent(eventId) {
+      if (!confirm('Delete this event? This cannot be undone.')) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/events/${eventId}`, { method: 'DELETE' });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || 'Failed to delete');
+        }
+        showMessage('Event deleted successfully.', 'success');
+        await loadAdmin();
+      } catch (err) {
+        showMessage(err.message || 'Error deleting event.', 'error');
+      }
+    }
+
+    async function viewRegistrations(eventId) {
+      try {
+        const res = await fetch(`${API_BASE}/api/events/${eventId}/students`);
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || 'Failed to load registrations');
+        }
+        const data = await res.json();
+        showDetails(eventId, data.students || []);
+      } catch (err) {
+        showMessage(err.message || 'Could not fetch registrations', 'error');
+      }
+    }
+
+    function showDetails(eventId, students) {
+      const panel = document.getElementById('detailsPanel');
+      const content = document.getElementById('detailsContent');
+      panel.hidden = false;
+
+      if (!students.length) {
+        content.innerHTML = '<p>No registrations found.</p>';
+        return;
+      }
+
+      const rows = students.map(s => `
+        <tr>
+          <td>${s.firstName || ''}</td>
+          <td>${s.lastName || ''}</td>
+          <td>${s.email || ''}</td>
+          <td>${s.department || ''}</td>
+          <td>${s.year || ''}</td>
+          <td>${s.section || ''}</td>
+          <td>${s.regNumber || ''}</td>
+          <td>${new Date(s.registeredAt).toLocaleString('en-IN')}</td>
+        </tr>
+      `).join('');
+
+      content.innerHTML = `
+        <p><strong>Event ID:</strong> ${eventId}</p>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>First</th>
+              <th>Last</th>
+              <th>Email</th>
+              <th>Dept.</th>
+              <th>Year</th>
+              <th>Section</th>
+              <th>Reg No.</th>
+              <th>Joined</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    document.getElementById('eventsTable').addEventListener('click', event => {
+      const btn = event.target.closest('button');
+      if (!btn) return;
+      const eventId = btn.dataset.eventId;
+      const action = btn.dataset.action;
+      if (action === 'view') {
+        viewRegistrations(eventId);
+      } else if (action === 'delete') {
+        deleteEvent(eventId);
+      }
+    });
+
+    document.getElementById('refreshBtn').addEventListener('click', loadAdmin);
+    document.getElementById('closeDetails').addEventListener('click', () => {
+      document.getElementById('detailsPanel').hidden = true;
+    });
+
+    loadAdmin();
+  </script>
+</body>
+</html>

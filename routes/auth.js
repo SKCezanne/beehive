@@ -12,11 +12,21 @@ const transporter = nodemailer.createTransport({
 });
 
 /* ---------- GET /api/me – session check ---------- */
-router.get('/me', (req, res) => {
+router.get('/me', async (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ loggedIn: false });
   }
-  res.json({ loggedIn: true, email: req.session.user.email });
+
+  try {
+    const pool = await getPool();
+    const [rows] = await pool.query('SELECT 1 FROM admins WHERE email = ? LIMIT 1', [req.session.user.email]);
+    const isAdmin = rows.length > 0;
+    if (isAdmin) req.session.isAdmin = true;
+    res.json({ loggedIn: true, email: req.session.user.email, isAdmin });
+  } catch (err) {
+    console.error('GET /api/me admin check error:', err);
+    res.json({ loggedIn: true, email: req.session.user.email, isAdmin: false });
+  }
 });
 
 /* ---------- POST /api/logout ---------- */
@@ -83,12 +93,46 @@ router.post('/verify-otp', async (req, res) => {
       [email],
     );
 
+    // Check if this user is also an admin
+    const [adminRows] = await pool.query('SELECT 1 FROM admins WHERE email = ? LIMIT 1', [email]);
+    const isAdmin = adminRows.length > 0;
+
     // Create session
     req.session.user = { email };
-    res.json({ message: 'Verified successfully' });
+    if (isAdmin) req.session.isAdmin = true;
+
+    res.json({ message: 'Verified successfully', isAdmin });
   } catch (err) {
     console.error('Verify OTP error:', err);
     res.status(500).json({ error: 'Verification failed' });
+  }
+});
+
+/* ---------- POST /api/admin/login ---------- */
+router.post('/admin/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password required' });
+    }
+
+    const pool = await getPool();
+    const [rows] = await pool.query(
+      'SELECT password FROM admins WHERE email = ? LIMIT 1',
+      [email],
+    );
+
+    if (!rows.length || rows[0].password !== password) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    req.session.user = { email };
+    req.session.isAdmin = true;
+
+    res.json({ message: 'Admin login successful', isAdmin: true });
+  } catch (err) {
+    console.error('Admin login error:', err);
+    res.status(500).json({ error: 'Login failed' });
   }
 });
 

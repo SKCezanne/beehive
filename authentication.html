@@ -320,6 +320,7 @@ async function sendOtp() {
 
   const res = await fetch('/api/send-otp', {
     method: 'POST',
+    credentials: 'include',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({ email })
   });
@@ -349,6 +350,7 @@ async function adminLogin() {
   try {
     const res = await fetch('/api/admin/login', {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
@@ -382,6 +384,7 @@ async function verifyOtp() {
 
   const res = await fetch('/api/verify-otp', {
     method: 'POST',
+    credentials: 'include',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({ email, otp })
   });
@@ -404,10 +407,17 @@ async function verifyOtp() {
         formData.append('image', blob, 'upload.png');
       }
 
-      await fetch('/api/events', {
-        method: 'POST',
-        body: formData
-      });
+const createRes = await fetch('/api/events', {
+      method: 'POST',
+      credentials: 'include',
+      body: formData
+    });
+
+    if (!createRes.ok) {
+      const err = await createRes.json().catch(() => ({}));
+      alert('Event creation failed: ' + (err.error || createRes.status));
+      return;
+    }
 
       sessionStorage.removeItem('pendingEventMeta');
       sessionStorage.removeItem('pendingEventImage');

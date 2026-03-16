@@ -1,458 +1,339 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verify SRM Email — Event Hive</title>
+  <title>Authentication - Event Hive</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
   <style>
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-    :root {
-      --bg:          #0b0c10;
-      --bg-card:     #16181e;
-      --bg-input:    #121418;
-      --honey:       #f5a623;
-      --honey-light: #ffc857;
-      --honey-glow:  rgba(245,166,35,0.25);
-      --border:      rgba(245,166,35,0.15);
-      --border-active: rgba(245,166,35,0.45);
-      --text:        #eaeaea;
-      --text-muted:  #5e5f67;
-      --radius:      14px;
-    }
-
+    * { box-sizing: border-box; }
     body {
-      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-      background: var(--bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      overflow: hidden;
-      color: var(--text);
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(245, 166, 35, 0.18), transparent 28%),
+        linear-gradient(135deg, #0a0c10, #11151c 48%, #17120b);
+      color: #f4f1e8;
+      display: grid;
+      place-items: center;
+      padding: 24px;
     }
-
-    /* honeycomb background pattern */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100' fill='none' stroke='rgba(245,166,35,0.06)' stroke-width='1'/%3E%3Cpath d='M28 0L28 34L0 50L0 84L28 100L56 84L56 50L28 34' fill='none' stroke='rgba(245,166,35,0.06)' stroke-width='1'/%3E%3C/svg%3E");
-      background-size: 56px 100px;
-      pointer-events: none;
-      z-index: 0;
+    .card {
+      width: min(460px, 100%);
+      background: rgba(18, 21, 28, 0.94);
+      border: 1px solid rgba(255, 200, 87, 0.18);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
     }
-
-    /* ambient glow */
-    body::after {
-      content: '';
-      position: fixed;
-      width: 420px;
-      height: 420px;
-      background: radial-gradient(circle, var(--honey-glow), transparent);
-      filter: blur(100px);
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      animation: pulse 6s infinite alternate ease-in-out;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    @keyframes pulse {
-      from { opacity: 0.3; transform: translate(-50%, -50%) scale(0.9); }
-      to   { opacity: 0.6; transform: translate(-50%, -50%) scale(1.1); }
-    }
-
-    .auth-card {
-      position: relative;
-      z-index: 1;
-      width: 400px;
-      padding: 40px;
-      border-radius: 20px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      box-shadow: 0 12px 48px rgba(0,0,0,0.55);
-      animation: fadeIn 0.5s ease forwards;
-      transform: translateY(20px);
-      opacity: 0;
-    }
-
-    @keyframes fadeIn {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    h2 {
-      margin: 0 0 8px;
-      text-align: center;
-      font-weight: 800;
-      font-size: 22px;
-      color: var(--text);
-    }
-
-    .auth-subtitle {
-      text-align: center;
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-bottom: 18px;
-    }
-
-    .auth-mode-toggle {
-      display: flex;
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    p { margin: 0 0 20px; color: #b9beca; line-height: 1.5; }
+    .toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 10px;
-      justify-content: center;
       margin-bottom: 18px;
     }
-
-    .mode-btn {
-      flex: 1;
-      padding: 10px 14px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(22, 24, 30, 0.7);
-      color: var(--text);
-      cursor: pointer;
-      font-weight: 700;
-      transition: 0.2s;
-    }
-
-    .mode-btn.active {
-      background: rgba(245, 166, 35, 0.15);
-      border-color: rgba(245, 166, 35, 0.4);
-    }
-
-    .mode-btn:hover {
-      background: rgba(245, 166, 35, 0.1);
-    }
-
-    .input-group {
-      position: relative;
-      margin-bottom: 16px;
-    }
-
-    .input-group input {
-      width: 100%;
+    .toggle button, .submit-btn, .secondary-btn {
+      border: 0;
+      border-radius: 14px;
       padding: 13px 16px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      outline: none;
-      font-size: 14px;
-      font-family: inherit;
-      background: var(--bg-input);
-      color: var(--text);
-      transition: 0.25s;
-    }
-    .input-group input::placeholder {
-      color: var(--text-muted);
-    }
-    .input-group input:focus {
-      border-color: var(--honey);
-      box-shadow: 0 0 0 3px var(--honey-glow);
-    }
-
-    .auth-btn {
-      width: 100%;
-      padding: 13px;
-      border-radius: var(--radius);
-      border: none;
-      background: var(--honey);
-      color: #0b0c10;
-      font-weight: 700;
-      font-size: 15px;
+      font: inherit;
       cursor: pointer;
-      transition: all 0.25s ease;
-      font-family: inherit;
-      position: relative;
-      overflow: hidden;
     }
-
-    .auth-btn:hover {
-      background: var(--honey-light);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 28px var(--honey-glow);
+    .toggle button {
+      background: rgba(255, 255, 255, 0.05);
+      color: #f4f1e8;
+      border: 1px solid transparent;
     }
-
-    .auth-btn:active {
-      transform: scale(0.97);
+    .toggle button.active {
+      background: rgba(245, 166, 35, 0.16);
+      border-color: rgba(245, 166, 35, 0.45);
     }
-
-    .auth-btn.loading {
-      opacity: 0.7;
-      pointer-events: none;
-    }
-
-    .loader {
-      display: none;
-      width: 18px;
-      height: 18px;
-      border: 3px solid rgba(11,12,16,0.3);
-      border-top: 3px solid #0b0c10;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .otp-section {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.4s ease;
-    }
-
-    .otp-section.active {
-      max-height: 200px;
-      margin-top: 16px;
-    }
-
-    .shake {
-      animation: shake 0.4s ease;
-    }
-
-    @keyframes shake {
-      0%   { transform: translateX(0); }
-      25%  { transform: translateX(-6px); }
-      50%  { transform: translateX(6px); }
-      75%  { transform: translateX(-6px); }
-      100% { transform: translateX(0); }
-    }
-
-    .back-link {
+    label {
       display: block;
-      text-align: center;
-      margin-top: 20px;
+      margin: 14px 0 8px;
       font-size: 13px;
-      color: var(--text-muted);
-      text-decoration: none;
-      transition: color 0.2s;
+      color: #d9deea;
     }
-    .back-link:hover { color: var(--honey); }
+    input {
+      width: 100%;
+      padding: 13px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: #0d1117;
+      color: #f4f1e8;
+      font: inherit;
+    }
+    input:focus {
+      outline: none;
+      border-color: rgba(245, 166, 35, 0.8);
+      box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.18);
+    }
+    .submit-btn {
+      width: 100%;
+      margin-top: 18px;
+      background: linear-gradient(135deg, #ffc857, #f59e0b);
+      color: #19140a;
+      font-weight: 800;
+    }
+    .secondary-btn {
+      width: 100%;
+      margin-top: 12px;
+      background: transparent;
+      color: #f4f1e8;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .otp-panel { display: none; margin-top: 18px; }
+    .otp-panel.active { display: block; }
+    .status {
+      min-height: 22px;
+      margin-top: 14px;
+      color: #ffc857;
+      font-size: 14px;
+    }
+    .status.error { color: #ff8d8d; }
+    .helper-row {
+      margin-top: 18px;
+      text-align: center;
+      color: #b9beca;
+      font-size: 14px;
+    }
+    .helper-row button {
+      border: 0;
+      background: transparent;
+      color: #ffc857;
+      font: inherit;
+      cursor: pointer;
+      padding: 0;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 18px;
+      color: #b9beca;
+      text-decoration: none;
+    }
   </style>
 </head>
 <body>
+  <div class="card">
+    <h1 id="studentTitle">Log In to Event Hive</h1>
+    <p id="studentSubtitle">Existing users can log in with email and password. New users can create an account with OTP verification.</p>
 
-<div class="auth-card">
-  <h2>⬡ Sign in to Event Hive</h2>
-  <p class="auth-subtitle">Choose how to sign in: student (OTP) or admin (password).</p>
-
-  <div class="auth-mode-toggle">
-    <button type="button" class="mode-btn active" id="modeStudentBtn">Student</button>
-    <button type="button" class="mode-btn" id="modeAdminBtn">Admin</button>
-  </div>
-
-  <div class="input-group">
-    <input type="email" id="email" placeholder="yourname@srmist.edu.in">
-  </div>
-
-  <div class="input-group" id="adminPasswordGroup" style="display:none;">
-    <input type="password" id="adminPassword" placeholder="Admin password">
-  </div>
-
-  <button class="auth-btn" id="sendBtn" onclick="sendOtp()">
-    Send OTP
-  </button>
-
-  <button class="auth-btn" id="adminBtn" onclick="adminLogin()" style="display:none; margin-top: 12px;">
-    Login as Admin
-  </button>
-
-  <div class="otp-section" id="otpSection">
-    <div class="input-group">
-      <input type="text" id="otp" placeholder="Enter 6-digit OTP">
+    <div class="toggle">
+      <button id="studentMode" class="active" type="button">Student</button>
+      <button id="adminMode" type="button">Admin</button>
     </div>
 
-    <button class="auth-btn" id="verifyBtn" onclick="verifyOtp()">
-      Verify & Continue
-    </button>
+    <label for="email">Email</label>
+    <input id="email" type="email" placeholder="name@srmist.edu.in">
+
+    <label for="password">Password</label>
+    <input id="password" type="password" placeholder="Enter your password">
+
+    <div id="studentActions">
+      <button class="submit-btn" type="button" id="sendOtpBtn">Log In</button>
+      <div class="otp-panel" id="otpPanel">
+        <label for="otp">Verification code</label>
+        <input id="otp" type="text" placeholder="Enter the 6-digit OTP">
+        <button class="secondary-btn" type="button" id="verifyBtn">Verify and Create Account</button>
+      </div>
+      <div class="helper-row">
+        <span id="helperText">Don't have an account?</span>
+        <button type="button" id="switchAuthModeBtn">Create 1!</button>
+      </div>
+    </div>
+
+    <button class="submit-btn" type="button" id="adminLoginBtn" style="display:none;">Login as Admin</button>
+    <div class="status" id="statusText"></div>
+    <a class="back-link" href="index.html">Back to home</a>
   </div>
 
-  <a href="index.html" class="back-link">← Back to Event Hive</a>
-</div>
+  <script>
+    const studentModeBtn = document.getElementById('studentMode');
+    const adminModeBtn = document.getElementById('adminMode');
+    const studentActions = document.getElementById('studentActions');
+    const adminLoginBtn = document.getElementById('adminLoginBtn');
+    const otpPanel = document.getElementById('otpPanel');
+    const statusText = document.getElementById('statusText');
+    const studentTitle = document.getElementById('studentTitle');
+    const studentSubtitle = document.getElementById('studentSubtitle');
+    const helperText = document.getElementById('helperText');
+    const switchAuthModeBtn = document.getElementById('switchAuthModeBtn');
+    const sendOtpBtn = document.getElementById('sendOtpBtn');
+    const verifyBtn = document.getElementById('verifyBtn');
 
-<script>
-const otpSection = document.getElementById('otpSection');
-const modeStudentBtn = document.getElementById('modeStudentBtn');
-const modeAdminBtn = document.getElementById('modeAdminBtn');
-const adminPasswordGroup = document.getElementById('adminPasswordGroup');
-const adminBtn = document.getElementById('adminBtn');
-let authMode = 'student';
+    let mode = 'student';
+    let studentAuthMode = 'signin';
 
-function setAuthMode(mode) {
-  authMode = mode;
-  modeStudentBtn.classList.toggle('active', mode === 'student');
-  modeAdminBtn.classList.toggle('active', mode === 'admin');
-  otpSection.classList.toggle('active', mode === 'student');
-  adminPasswordGroup.style.display = mode === 'admin' ? 'block' : 'none';
-  document.getElementById('sendBtn').style.display = mode === 'student' ? 'block' : 'none';
-  adminBtn.style.display = mode === 'admin' ? 'block' : 'none';
-}
+    function setStatus(message, isError = false) {
+      statusText.textContent = message || '';
+      statusText.className = isError ? 'status error' : 'status';
+    }
 
-modeStudentBtn.addEventListener('click', () => setAuthMode('student'));
-modeAdminBtn.addEventListener('click', () => setAuthMode('admin'));
+    function updateStudentModeUi() {
+      const creating = studentAuthMode === 'signup';
+      studentTitle.textContent = creating ? 'Create Your Event Hive Account' : 'Log In to Event Hive';
+      studentSubtitle.textContent = creating
+        ? 'Create an account with your college email, password, and OTP.'
+        : 'Use your college email and password to log in. OTP is only used while creating a new account.';
+      sendOtpBtn.textContent = creating ? 'Send OTP to Create Account' : 'Log In';
+      verifyBtn.textContent = 'Verify and Create Account';
+      helperText.textContent = creating ? 'Already have an account?' : "Don't have an account?";
+      switchAuthModeBtn.textContent = creating ? 'Log in' : 'Create 1!';
+      otpPanel.classList.toggle('active', false);
+    }
 
-setAuthMode('student');
+    function setMode(nextMode) {
+      mode = nextMode;
+      studentModeBtn.classList.toggle('active', nextMode === 'student');
+      adminModeBtn.classList.toggle('active', nextMode === 'admin');
+      studentActions.style.display = nextMode === 'student' ? 'block' : 'none';
+      adminLoginBtn.style.display = nextMode === 'admin' ? 'block' : 'none';
+      otpPanel.classList.remove('active');
+      document.getElementById('otp').value = '';
+      setStatus('');
+    }
 
-async function sendOtp() {
-  if (authMode !== 'student') {
-    return adminLogin();
-  }
-
-  const email = document.getElementById('email').value;
-  const button = document.getElementById('sendBtn');
-
-  if (!email) {
-    button.classList.add('shake');
-    setTimeout(() => button.classList.remove('shake'), 400);
-    return;
-  }
-
-  button.classList.add('loading');
-
-  const res = await fetch('/api/send-otp', {
-    method: 'POST',
-    credentials: 'include',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ email })
-  });
-
-  const data = await res.json();
-  button.classList.remove('loading');
-
-  if (res.ok) {
-    otpSection.classList.add('active');
-  } else {
-    alert(data.error);
-  }
-}
-
-async function adminLogin() {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('adminPassword').value;
-  const button = document.getElementById('adminBtn');
-
-  if (!email || !password) {
-    button.classList.add('shake');
-    setTimeout(() => button.classList.remove('shake'), 400);
-    return;
-  }
-
-  button.classList.add('loading');
-  try {
-    const res = await fetch('/api/admin/login', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+    studentModeBtn.addEventListener('click', () => setMode('student'));
+    adminModeBtn.addEventListener('click', () => setMode('admin'));
+    switchAuthModeBtn.addEventListener('click', () => {
+      studentAuthMode = studentAuthMode === 'signin' ? 'signup' : 'signin';
+      otpPanel.classList.remove('active');
+      document.getElementById('otp').value = '';
+      setStatus('');
+      updateStudentModeUi();
     });
 
-    const data = await res.json().catch(() => ({}));
-    if (res.ok) {
-      window.location.href = 'admin.html';
-    } else {
-      alert(data.error || 'Invalid credentials');
-    }
-  } catch (err) {
-    console.error('Admin login error:', err);
-    alert('Network error');
-  } finally {
-    button.classList.remove('loading');
-  }
-}
+    async function submitPendingEventIfAny() {
+      const meta = JSON.parse(sessionStorage.getItem('pendingEventMeta') || 'null');
+      const imageBase64 = sessionStorage.getItem('pendingEventImage');
+      if (!meta) return;
 
-async function verifyOtp() {
-  const email = document.getElementById('email').value;
-  const otp = document.getElementById('otp').value;
-  const button = document.getElementById('verifyBtn');
-
-  if (!otp) {
-    button.classList.add('shake');
-    setTimeout(() => button.classList.remove('shake'), 400);
-    return;
-  }
-
-  button.classList.add('loading');
-
-  const res = await fetch('/api/verify-otp', {
-    method: 'POST',
-    credentials: 'include',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ email, otp })
-  });
-
-  const data = await res.json();
-  button.classList.remove('loading');
-
-  if (res.ok) {
-    const meta = JSON.parse(sessionStorage.getItem('pendingEventMeta'));
-    const imageBase64 = sessionStorage.getItem('pendingEventImage');
-
-    if (meta) {
       const formData = new FormData();
-      Object.keys(meta).forEach(key => {
-        formData.append(key, meta[key]);
-      });
+      Object.entries(meta).forEach(([key, value]) => formData.append(key, value));
 
       if (imageBase64) {
-        const blob = await fetch(imageBase64).then(r => r.blob());
-        formData.append('image', blob, 'upload.png');
+        const blob = await fetch(imageBase64).then(response => response.blob());
+        formData.append('image', blob, 'event-image.png');
       }
 
-const createRes = await fetch('/api/events', {
-      method: 'POST',
-      credentials: 'include',
-      body: formData
-    });
-
-    if (!createRes.ok) {
-      const err = await createRes.json().catch(() => ({}));
-      alert('Event creation failed: ' + (err.error || createRes.status));
-      return;
-    }
+      const res = await fetch('/api/events', { method: 'POST', body: formData });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Could not save pending event');
+      }
 
       sessionStorage.removeItem('pendingEventMeta');
       sessionStorage.removeItem('pendingEventImage');
     }
 
-    // Redirect based on whether this user is an admin
-    if (data.isAdmin) {
-      window.location.href = 'admin.html';
-    } else {
-      window.location.href = 'index.html';
+    async function sendOtp() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (studentAuthMode === 'signin') {
+        const res = await fetch('/api/login-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setStatus(data.error || 'Could not log in', true);
+          return;
+        }
+
+        try {
+          await submitPendingEventIfAny();
+          window.location.href = 'index.html';
+        } catch (err) {
+          setStatus(err.message, true);
+        }
+        return;
+      }
+
+      const res = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, action: studentAuthMode }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setStatus(data.error || 'Could not send OTP', true);
+        return;
+      }
+
+      otpPanel.classList.add('active');
+      setStatus('OTP sent. Verify to create your account.');
     }
 
-  } else {
-    alert(data.error);
-  }
+    async function verifyOtp() {
+      const email = document.getElementById('email').value.trim();
+      const otp = document.getElementById('otp').value.trim();
 
-}
+      const res = await fetch('/api/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp }),
+      });
 
-async function initAuthPage() {
-  try {
-    const res = await fetch('/api/me');
-    if (!res.ok) return;
-    const data = await res.json();
-    if (data.isAdmin) {
-      window.location.href = 'admin.html';
-    } else {
-      window.location.href = 'index.html';
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setStatus(data.error || 'Verification failed', true);
+        return;
+      }
+
+      try {
+        await submitPendingEventIfAny();
+        window.location.href = 'index.html';
+      } catch (err) {
+        setStatus(err.message, true);
+      }
     }
-  } catch {
-    // ignore
-  }
-}
 
-initAuthPage();
-</script>
+    async function adminLogin() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
 
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setStatus(data.error || 'Admin login failed', true);
+        return;
+      }
+
+      window.location.href = 'admin.html';
+    }
+
+    async function init() {
+      try {
+        const res = await fetch('/api/me');
+        if (!res.ok) return;
+        const data = await res.json();
+        window.location.href = data.isAdmin ? 'admin.html' : 'index.html';
+      } catch (_) {
+        // ignore
+      }
+    }
+
+    document.getElementById('sendOtpBtn').addEventListener('click', sendOtp);
+    document.getElementById('verifyBtn').addEventListener('click', verifyOtp);
+    document.getElementById('adminLoginBtn').addEventListener('click', adminLogin);
+
+    updateStudentModeUi();
+    setMode('student');
+    init();
+  </script>
 </body>
 </html>

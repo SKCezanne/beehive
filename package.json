@@ -4,6 +4,7 @@
   "description": "Event Hive - MySQL backend with JSON file sync",
   "main": "server.js",
   "scripts": {
+    "create-admin": "node create-admin.js",
     "start": "node server.js",
     "dev": "node server.js"
   },

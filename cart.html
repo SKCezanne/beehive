@@ -16,9 +16,10 @@
   <div class="nav-container">
     <a href="index.html" class="logo">⬡ Event Hive</a>
     <div class="nav-right">
+      
       <a href="calendar.html" class="nav-link">📅 Calendar</a>
       <a href="cart.html" class="nav-link nav-link--active">🛒 My Events</a>
-      <a href="profile.html" class="nav-link">👤 Profile</a>
+      <a href="authentication.html" class="nav-link" id="profileNavLink">Sign In</a>
       <div class="notification-container">
         <button class="notification-btn" onclick="toggleNotifications()">🔔</button>
         <div class="notification-dropdown" id="notificationDropdown">
@@ -72,6 +73,17 @@
 <script>
 const API_BASE = window.location.origin;
 
+async function updateTopbarProfileLink() {
+  try {
+    const res = await fetch(`${API_BASE}/api/me`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const profileNavLink = document.getElementById('profileNavLink');
+    profileNavLink.textContent = 'My Profile';
+    profileNavLink.href = data.isAdmin ? 'admin.html' : 'profile.html';
+  } catch {}
+}
+
 /* ---- Notification toggle ---- */
 function toggleNotifications() {
   const dd = document.getElementById('notificationDropdown');
@@ -95,9 +107,9 @@ async function loadCart() {
       grid.innerHTML = '';
       empty.style.display = 'flex';
       empty.querySelector('h2').textContent = 'Login required';
-      empty.querySelector('p').textContent = 'Please verify your SRM email first to view your registered events.';
+      empty.querySelector('p').textContent = 'Please login with your SRM email first to view your registered events.';
       empty.querySelector('a').href = 'authentication.html';
-      empty.querySelector('a').textContent = 'Verify Email →';
+      empty.querySelector('a').textContent = 'Login →';
       return;
     }
     if (!res.ok) throw new Error('Failed');
@@ -139,7 +151,7 @@ function renderCart(filter) {
     const registeredAt = new Date(ev.registered_at).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
 
     return `
-      <div class="cart-card ${isPast ? 'cart-card--past' : ''}">
+      <div class="cart-card ${isPast ? 'cart-card--past' : ''}" onclick="openEventRoom(${ev.event_id})" style="cursor:pointer;">
         <div class="cart-card__date-badge">
           <span class="badge-month">${month}</span>
           <span class="badge-day">${day}</span>
@@ -164,14 +176,19 @@ function renderCart(filter) {
           <div class="cart-card__footer">
             <span class="cart-card__registered">Registered ${registeredAt}</span>
             <div class="cart-card__actions">
-              ${ev.registration_link ? `<a href="${ev.registration_link}" target="_blank" class="cart-action-btn cart-action-btn--primary">Open Link ↗</a>` : ''}
-              <button class="cart-action-btn cart-action-btn--danger" onclick="removeFromCart(${ev.event_id})">Remove</button>
+              ${ev.registration_link ? `<a href="${ev.registration_link}" target="_blank" class="cart-action-btn cart-action-btn--primary" onclick="event.stopPropagation()">Open Link ↗</a>` : ''}
+              <button class="cart-action-btn cart-action-btn--primary" onclick="event.stopPropagation(); openEventRoom(${ev.event_id})">Announcements</button>
+              <button class="cart-action-btn cart-action-btn--danger" onclick="event.stopPropagation(); removeFromCart(${ev.event_id})">Remove</button>
             </div>
           </div>
         </div>
       </div>
     `;
   }).join('');
+}
+
+function openEventRoom(eventId) {
+  window.location.href = `announcement.html?eventId=${eventId}`;
 }
 
 /* ---- Remove from cart ---- */
@@ -204,6 +221,7 @@ document.querySelectorAll('.cart-tab').forEach(tab => {
 });
 
 /* ---- Init ---- */
+updateTopbarProfileLink();
 loadCart();
 </script>
 </body>

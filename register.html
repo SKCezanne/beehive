@@ -15,9 +15,10 @@
   <div class="nav-container">
     <a href="index.html" class="logo">⬡ Event Hive</a>
     <div class="nav-right">
+      <a href="about.html" class="nav-link">About ℹ️</a>
       <a href="calendar.html" class="nav-link">📅 Calendar</a>
       <a href="cart.html" class="nav-link">🛒 My Events</a>
-      <a href="profile.html" class="nav-link">👤 Profile</a>
+      <a href="authentication.html" class="nav-link" id="profileNavLink">Sign In</a>
       <div class="notification-container">
         <button class="notification-btn" onclick="toggleNotifications()">🔔</button>
         <div class="notification-dropdown" id="notificationDropdown">
@@ -114,56 +115,56 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  updateTopbarProfileLink();
   const dropZone = document.getElementById('dropZone');
-const imageInput = document.getElementById('imageInput');
-const previewImage = document.getElementById('previewImage');
+  const imageInput = document.getElementById('imageInput');
+  const previewImage = document.getElementById('previewImage');
 
-dropZone.addEventListener('click', () => imageInput.click());
+  dropZone.addEventListener('click', () => imageInput.click());
 
-dropZone.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  dropZone.classList.add('drag-active');
-});
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('drag-active');
+  });
 
-dropZone.addEventListener('dragleave', () => {
-  dropZone.classList.remove('drag-active');
-});
+  dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('drag-active');
+  });
 
-dropZone.addEventListener('drop', (e) => {
-  e.preventDefault();
-  dropZone.classList.remove('drag-active');
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-active');
 
-  const file = e.dataTransfer.files[0];
-  if (file) handleImage(file);
-});
+    const file = e.dataTransfer.files[0];
+    if (file) handleImage(file);
+  });
 
-imageInput.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (file) handleImage(file);
-});
+  imageInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) handleImage(file);
+  });
 
-function handleImage(file) {
-  if (!file.type.startsWith('image/')) {
-    alert('Only image files allowed');
-    return;
+  function handleImage(file) {
+    if (!file.type.startsWith('image/')) {
+      alert('Only image files allowed');
+      return;
+    }
+
+    imageInput.files = createFileList(file);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      previewImage.src = reader.result;
+      previewImage.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
   }
 
-  imageInput.files = createFileList(file);
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    previewImage.src = reader.result;
-    previewImage.style.display = 'block';
-  };
-  reader.readAsDataURL(file);
-}
-
-/* Needed because input.files is read-only */
-function createFileList(file) {
-  const dt = new DataTransfer();
-  dt.items.add(file);
-  return dt.files;
-}
+  function createFileList(file) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    return dt.files;
+  }
 
 
   // set minimum date
@@ -171,45 +172,73 @@ function createFileList(file) {
     new Date().toISOString().split('T')[0];
 
   const form = document.getElementById('eventForm');
-  const API_BASE = window.location.origin;
+  const registerBtn = document.getElementById('registerBtn');
 
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-  const date = document.getElementById('eventDate').value;
-  const time = document.getElementById('eventTime').value;
-
-  const meta = {
-  name: form.name.value.trim(),
-  description: form.description.value.trim(),
-  category: form.category.value,
-  price: form.price.value,
-  registration_link: form.registration_link.value.trim(),
-  time: `${date}T${time}`
-};
-
-
-  // Store basic event data
-  sessionStorage.setItem('pendingEventMeta', JSON.stringify(meta));
-
-  const file = document.getElementById('imageInput').files[0];
-
-  // If image exists, convert to base64 first
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = () => {
-      sessionStorage.setItem('pendingEventImage', reader.result);
-      window.location.href = 'authentication.html';
+    const date = document.getElementById('eventDate').value;
+    const time = document.getElementById('eventTime').value;
+    const meta = {
+      name: form.name.value.trim(),
+      description: form.description.value.trim(),
+      category: form.category.value,
+      price: form.price.value,
+      registration_link: form.registration_link.value.trim(),
+      time: `${date}T${time}`,
     };
-    reader.readAsDataURL(file);
-  } else {
-    window.location.href = 'authentication.html';
-  }
+
+    const formData = new FormData();
+    Object.entries(meta).forEach(([key, value]) => formData.append(key, value));
+    if (imageInput.files[0]) {
+      formData.append('image', imageInput.files[0]);
+    }
+
+    registerBtn.disabled = true;
+
+    try {
+      const res = await fetch('/api/events', { method: 'POST', body: formData });
+      if (res.ok) {
+        window.location.href = 'profile.html';
+        return;
+      }
+
+      if (res.status === 401) {
+        sessionStorage.setItem('pendingEventMeta', JSON.stringify(meta));
+        if (imageInput.files[0]) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            sessionStorage.setItem('pendingEventImage', reader.result);
+            window.location.href = 'authentication.html';
+          };
+          reader.readAsDataURL(imageInput.files[0]);
+        } else {
+          window.location.href = 'authentication.html';
+        }
+        return;
+      }
+
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || 'Failed to register event');
+    } catch (err) {
+      console.error(err);
+      alert('Network error');
+    } finally {
+      registerBtn.disabled = false;
+    }
+  });
 });
 
-
-
-});
+async function updateTopbarProfileLink() {
+  try {
+    const res = await fetch('/api/me');
+    if (!res.ok) return;
+    const data = await res.json();
+    const profileNavLink = document.getElementById('profileNavLink');
+    profileNavLink.textContent = 'My Profile';
+    profileNavLink.href = data.isAdmin ? 'admin.html' : 'profile.html';
+  } catch {}
+}
 
 /* ---- Notification toggle ---- */
 function toggleNotifications() {

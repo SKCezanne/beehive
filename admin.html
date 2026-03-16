@@ -3,247 +3,269 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard — Event Hive</title>
+  <title>Admin Dashboard - Event Hive</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: #0c0f14;
+      color: #f4f4f5;
+    }
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .title h1 { margin: 0 0 6px; }
+    .title p { margin: 0; color: #a1a1aa; }
+    .btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 14px;
+      font: inherit;
+      cursor: pointer;
+    }
+    .btn-primary { background: #f59e0b; color: #1a1205; font-weight: 800; }
+    .btn-subtle { background: rgba(255,255,255,0.06); color: #f4f4f5; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat {
+      background: #131923;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 18px;
+      padding: 18px;
+    }
+    .stat .value { font-size: 28px; font-weight: 800; }
+    .panel {
+      background: #131923;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 780px;
+    }
+    th, td {
+      padding: 12px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      text-align: left;
+      font-size: 14px;
+      vertical-align: top;
+    }
+    th { color: #fcd34d; }
+    .stack {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 12px;
+      background: rgba(255,255,255,0.08);
+    }
+    .badge-banned { background: rgba(239, 68, 68, 0.18); color: #fca5a5; }
+    .status { margin-top: 10px; color: #fcd34d; }
+  </style>
 </head>
 <body>
-  <nav class="top-bar">
-    <div class="nav-container">
-      <a href="index.html" class="logo">⬡ Event Hive</a>
-      <div class="nav-right">
-        <a href="calendar.html" class="nav-link">📅 Calendar</a>
-        <a href="cart.html" class="nav-link">🛒 My Events</a>
-        <a href="profile.html" class="nav-link">👤 Profile</a>
-        <a href="admin.html" class="nav-link nav-link--active">🛠️ Admin</a>
-        <div class="notification-container">
-          <button class="notification-btn" onclick="toggleNotifications()">🔔</button>
-          <div class="notification-dropdown" id="notificationDropdown">
-            <div class="notification-header">Notifications</div>
-          </div>
-        </div>
+  <div class="wrap">
+    <div class="header">
+      <div class="title">
+        <h1>Event Hive Admin</h1>
+        <p>Manage students, hosted events, registrations, and bans.</p>
+      </div>
+      <div class="stack">
+        <button class="btn btn-subtle" type="button" onclick="window.location.href='index.html'">Open Site</button>
+        <button class="btn btn-primary" type="button" onclick="logout()">Logout</button>
       </div>
     </div>
-  </nav>
 
-  <section class="admin-section">
-    <div class="container">
-      <h1 class="section-title">Admin Panel</h1>
-      <p class="section-subtitle">View all events, see who created them, who has joined, and delete events if needed.</p>
+    <div class="stats" id="statsGrid"></div>
 
-      <div id="adminMessage" class="admin-message"></div>
-
-      <div class="admin-controls">
-        <button class="button" id="refreshBtn">Refresh</button>
-      </div>
-
-      <div class="admin-table-wrapper">
-        <table class="admin-table" id="eventsTable">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Category</th>
-              <th>Date</th>
-              <th>Created By</th>
-              <th>Registrations</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="eventsTbody"></tbody>
-        </table>
-      </div>
-
-      <div class="admin-details" id="detailsPanel" hidden>
-        <h2>Registrations</h2>
-        <div id="detailsContent"></div>
-        <button class="button" id="closeDetails">Close</button>
-      </div>
-
+    <div class="panel">
+      <h2>Users</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Department</th>
+            <th>Hosted</th>
+            <th>Registered</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="usersTable"></tbody>
+      </table>
     </div>
-  </section>
+
+    <div class="panel">
+      <h2>Events</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Event</th>
+            <th>Host</th>
+            <th>Time</th>
+            <th>Registrations</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="eventsTable"></tbody>
+      </table>
+      <div class="status" id="statusText"></div>
+    </div>
+  </div>
 
   <script>
-    const API_BASE = window.location.origin;
-
-    function toggleNotifications() {
-      const dropdown = document.getElementById('notificationDropdown');
-      dropdown.classList.toggle('show');
+    function formatDate(value) {
+      return value ? new Date(value).toLocaleString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }) : 'Permanent';
     }
 
-    window.addEventListener('click', function(e) {
-      if (!e.target.matches('.notification-btn')) {
-        const dropdown = document.getElementById('notificationDropdown');
-        if (dropdown.classList.contains('show')) {
-          dropdown.classList.remove('show');
-        }
+    function setStatus(message) {
+      document.getElementById('statusText').textContent = message || '';
+    }
+
+    async function ensureAdmin() {
+      const res = await fetch('/api/me');
+      if (!res.ok) {
+        window.location.href = 'authentication.html';
+        return false;
       }
-    });
-
-    async function fetchAdminEvents() {
-      const resp = await fetch(`${API_BASE}/api/events/admin`);
-      if (!resp.ok) throw resp;
-      return resp.json();
-    }
-
-    function showMessage(message, type = 'info') {
-      const el = document.getElementById('adminMessage');
-      el.textContent = message;
-      el.className = `admin-message admin-message--${type}`;
-    }
-
-    function clearMessage() {
-      const el = document.getElementById('adminMessage');
-      el.textContent = '';
-      el.className = 'admin-message';
-    }
-
-    function formatDateTime(dateString) {
-      if (!dateString) return '-';
-      const date = new Date(dateString);
-      return date.toLocaleString('en-IN', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-    }
-
-    function buildTable(events) {
-      const tbody = document.getElementById('eventsTbody');
-      tbody.innerHTML = '';
-
-      if (!events.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty-row">No events found.</td></tr>';
-        return;
+      const session = await res.json();
+      if (!session.isAdmin) {
+        window.location.href = 'index.html';
+        return false;
       }
-
-      events.forEach(event => {
-        const tr = document.createElement('tr');
-
-        tr.innerHTML = `
-          <td>${event.id}</td>
-          <td>${event.name}</td>
-          <td>${event.category}</td>
-          <td>${formatDateTime(event.time)}</td>
-          <td>${event.created_by || '-'}</td>
-          <td>${event.registration_count ?? 0}</td>
-          <td class="admin-actions">
-            <button class="button button--small" data-event-id="${event.id}" data-action="view">View</button>
-            <button class="button button--small button--danger" data-event-id="${event.id}" data-action="delete">Delete</button>
-          </td>
-        `;
-
-        tbody.appendChild(tr);
-      });
+      return true;
     }
 
-    async function loadAdmin() {
-      clearMessage();
-      try {
-        const events = await fetchAdminEvents();
-        buildTable(events);
-      } catch (err) {
-        if (err.status === 401) {
-          window.location.href = 'authentication.html';
-          return;
-        }
-        if (err.status === 403) {
-          window.location.href = 'index.html';
-          return;
-        }
-        showMessage('Failed to load events. Check that the backend is running.', 'error');
-        console.error(err);
-      }
-    }
-
-    async function deleteEvent(eventId) {
-      if (!confirm('Delete this event? This cannot be undone.')) return;
-      try {
-        const res = await fetch(`${API_BASE}/api/events/${eventId}`, { method: 'DELETE' });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || 'Failed to delete');
-        }
-        showMessage('Event deleted successfully.', 'success');
-        await loadAdmin();
-      } catch (err) {
-        showMessage(err.message || 'Error deleting event.', 'error');
-      }
-    }
-
-    async function viewRegistrations(eventId) {
-      try {
-        const res = await fetch(`${API_BASE}/api/events/${eventId}/students`);
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || 'Failed to load registrations');
-        }
-        const data = await res.json();
-        showDetails(eventId, data.students || []);
-      } catch (err) {
-        showMessage(err.message || 'Could not fetch registrations', 'error');
-      }
-    }
-
-    function showDetails(eventId, students) {
-      const panel = document.getElementById('detailsPanel');
-      const content = document.getElementById('detailsContent');
-      panel.hidden = false;
-
-      if (!students.length) {
-        content.innerHTML = '<p>No registrations found.</p>';
-        return;
-      }
-
-      const rows = students.map(s => `
-        <tr>
-          <td>${s.firstName || ''}</td>
-          <td>${s.lastName || ''}</td>
-          <td>${s.email || ''}</td>
-          <td>${s.department || ''}</td>
-          <td>${s.year || ''}</td>
-          <td>${s.section || ''}</td>
-          <td>${s.regNumber || ''}</td>
-          <td>${new Date(s.registeredAt).toLocaleString('en-IN')}</td>
-        </tr>
-      `).join('');
-
-      content.innerHTML = `
-        <p><strong>Event ID:</strong> ${eventId}</p>
-        <table class="admin-table">
-          <thead>
-            <tr>
-              <th>First</th>
-              <th>Last</th>
-              <th>Email</th>
-              <th>Dept.</th>
-              <th>Year</th>
-              <th>Section</th>
-              <th>Reg No.</th>
-              <th>Joined</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
+    async function loadSummary() {
+      const res = await fetch('/api/admin/summary');
+      if (!res.ok) return;
+      const data = await res.json();
+      document.getElementById('statsGrid').innerHTML = `
+        <div class="stat"><div class="value">${data.users}</div><div>Total users</div></div>
+        <div class="stat"><div class="value">${data.events}</div><div>Total events</div></div>
+        <div class="stat"><div class="value">${data.registrations}</div><div>Total registrations</div></div>
+        <div class="stat"><div class="value">${data.bannedUsers}</div><div>Active bans</div></div>
       `;
     }
 
-    document.getElementById('eventsTable').addEventListener('click', event => {
-      const btn = event.target.closest('button');
-      if (!btn) return;
-      const eventId = btn.dataset.eventId;
-      const action = btn.dataset.action;
-      if (action === 'view') {
-        viewRegistrations(eventId);
-      } else if (action === 'delete') {
-        deleteEvent(eventId);
-      }
-    });
+    async function loadUsers() {
+      const res = await fetch('/api/admin/users');
+      if (!res.ok) return;
+      const users = await res.json();
+      document.getElementById('usersTable').innerHTML = users.map(user => `
+        <tr>
+          <td>
+            <strong>${[user.first_name, user.last_name].filter(Boolean).join(' ') || 'Unnamed user'}</strong><br>
+            ${user.email}
+          </td>
+          <td>${user.department || '-'} ${user.year ? `Year ${user.year}` : ''}</td>
+          <td>${user.hosted_count}</td>
+          <td>${user.registered_count}</td>
+          <td>
+            <span class="badge ${user.status === 'banned' ? 'badge-banned' : ''}">
+              ${user.status}
+            </span>
+            ${user.banned_until ? `<div>Until ${formatDate(user.banned_until)}</div>` : ''}
+            ${user.ban_reason ? `<div>${user.ban_reason}</div>` : ''}
+          </td>
+          <td class="stack">
+            <button class="btn btn-subtle" type="button" onclick="banUser('${encodeURIComponent(user.email)}', 'limited')">Temp ban</button>
+            <button class="btn btn-subtle" type="button" onclick="banUser('${encodeURIComponent(user.email)}', 'permanent')">Perm ban</button>
+            <button class="btn btn-primary" type="button" onclick="unbanUser('${encodeURIComponent(user.email)}')">Unban</button>
+          </td>
+        </tr>
+      `).join('');
+    }
 
-    document.getElementById('refreshBtn').addEventListener('click', loadAdmin);
-    document.getElementById('closeDetails').addEventListener('click', () => {
-      document.getElementById('detailsPanel').hidden = true;
-    });
+    async function loadEvents() {
+      const res = await fetch('/api/admin/events');
+      if (!res.ok) return;
+      const events = await res.json();
+      document.getElementById('eventsTable').innerHTML = events.map(event => `
+        <tr>
+          <td>
+            <strong>${event.name}</strong><br>
+            <span class="badge">${event.category}</span>
+          </td>
+          <td>${event.created_by || '-'}</td>
+          <td>${formatDate(event.time)}</td>
+          <td>${event.registration_count}</td>
+          <td class="stack">
+            <button class="btn btn-subtle" type="button" onclick="deleteEvent(${event.id})">Delete event</button>
+          </td>
+        </tr>
+      `).join('');
+    }
 
-    loadAdmin();
+    async function banUser(encodedEmail, mode) {
+      const reason = prompt('Reason for the ban:') || '';
+      const days = mode === 'limited' ? Number(prompt('How many days should the ban last?', '7') || '7') : null;
+      const res = await fetch(`/api/admin/users/${encodedEmail}/ban`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode, days, reason }),
+      });
+      const data = await res.json().catch(() => ({}));
+      setStatus(data.message || data.error || 'Action completed');
+      await Promise.all([loadSummary(), loadUsers()]);
+    }
+
+    async function unbanUser(encodedEmail) {
+      const res = await fetch(`/api/admin/users/${encodedEmail}/unban`, { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
+      setStatus(data.message || data.error || 'Action completed');
+      await Promise.all([loadSummary(), loadUsers()]);
+    }
+
+    async function deleteEvent(eventId) {
+      if (!confirm('Delete this event?')) return;
+      const res = await fetch(`/api/events/${eventId}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+      setStatus(data.message || data.error || 'Action completed');
+      await Promise.all([loadSummary(), loadEvents()]);
+    }
+
+    async function logout() {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = 'authentication.html';
+    }
+
+    (async function init() {
+      const ok = await ensureAdmin();
+      if (!ok) return;
+      await Promise.all([loadSummary(), loadUsers(), loadEvents()]);
+    })();
   </script>
 </body>
 </html>

@@ -1,8 +1,11 @@
-const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+require('dotenv').config();
 
 module.exports = {
   port: process.env.PORT || 3000,
+  // Set AUTH_ENABLED=0 to skip login, OTP, and auth checks during testing.
+  authEnabled: process.env.AUTH_ENABLED !== '0',
+  testUserEmail: process.env.TEST_USER_EMAIL || 'test.user@srmist.edu.in',
+  testAdminEmail: process.env.TEST_ADMIN_EMAIL || 'test.admin@srmist.edu.in',
   db: {
     host:     process.env.DB_HOST     || 'localhost',
     user:     process.env.DB_USER     || 'root',

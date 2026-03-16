@@ -3,22 +3,70 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Profile — Event Hive</title>
+  <title>Profile - Event Hive</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <style>
+    .profile-extra-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    .mini-events-list {
+      display: grid;
+      gap: 12px;
+    }
+    .mini-event {
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 14px;
+      background: rgba(255,255,255,0.03);
+    }
+    .mini-event h4 {
+      margin: 0 0 6px;
+      font-size: 16px;
+    }
+    .mini-event p {
+      margin: 0;
+      color: #9ea6b8;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .students-panel {
+      margin-top: 12px;
+      overflow-x: auto;
+    }
+    .students-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    .students-table th,
+    .students-table td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      text-align: left;
+    }
+    .host-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+  </style>
 </head>
 <body>
-
-<!-- Top Navigation Bar -->
 <nav class="top-bar">
   <div class="nav-container">
-    <a href="index.html" class="logo">⬡ Event Hive</a>
+    <a href="index.html" class="logo">Event Hive</a>
     <div class="nav-right">
-      <a href="calendar.html" class="nav-link">📅 Calendar</a>
-      <a href="cart.html" class="nav-link">🛒 My Events</a>
-      <a href="profile.html" class="nav-link nav-link--active">👤 Profile</a>
+      <a href="calendar.html" class="nav-link">Calendar</a>
+      <a href="cart.html" class="nav-link">My Events</a>
+      <a href="authentication.html" class="nav-link nav-link--active" id="profileNavLink">Sign In</a>
       <div class="notification-container">
         <button class="notification-btn" onclick="toggleNotifications()">🔔</button>
         <div class="notification-dropdown" id="notificationDropdown">
@@ -29,22 +77,18 @@
   </div>
 </nav>
 
-<!-- Profile Section -->
 <section class="profile-section">
   <div class="container">
-
     <div class="profile-layout">
-
-      <!-- Left: Avatar + Quick Info -->
       <div class="profile-sidebar">
         <div class="avatar-wrapper" id="avatarWrapper">
           <img id="avatarPreview" src="" alt="Profile Picture" class="avatar-img" style="display:none;">
           <div id="avatarPlaceholder" class="avatar-placeholder">
-            <span>👤</span>
+            <span>Profile</span>
             <p>Upload Photo</p>
           </div>
           <input type="file" id="avatarInput" accept="image/*" hidden>
-          <button class="avatar-edit-btn" id="avatarEditBtn" title="Change photo">✏️</button>
+          <button class="avatar-edit-btn" id="avatarEditBtn" type="button" title="Change photo">Edit</button>
         </div>
 
         <div class="profile-name-display">
@@ -55,470 +99,424 @@
         <div class="profile-stats">
           <div class="stat-item">
             <span class="stat-value" id="eventsPosted">0</span>
-            <span class="stat-label">Events Posted</span>
+            <span class="stat-label">Hosted</span>
           </div>
           <div class="stat-item">
             <span class="stat-value" id="eventsJoined">0</span>
-            <span class="stat-label">Events Joined</span>
+            <span class="stat-label">Registered</span>
           </div>
         </div>
 
-        <button class="profile-logout-btn" id="logoutBtn" style="display:none;" onclick="logoutUser()">Logout</button>
+        <button class="profile-logout-btn" id="logoutBtn" type="button">Logout</button>
       </div>
 
-      <!-- Right: Editable Form -->
       <div class="profile-main">
-
-        <!-- My Posted Events Section -->
-        <div class="profile-card" id="myEventsCard" style="margin-bottom: 24px;">
-          <div class="profile-card__header">
-            <h2>📋 My Posted Events</h2>
-            <p class="profile-card__sub">Events you've created. See how many people registered.</p>
+        <div class="profile-extra-grid">
+          <div class="profile-card">
+            <div class="profile-card__header">
+              <h2>Registered Events</h2>
+              <p class="profile-card__sub">Past and upcoming events you have joined.</p>
+            </div>
+            <div id="registeredEventsList" class="mini-events-list">
+              <p class="my-events-empty">Loading your registrations...</p>
+            </div>
           </div>
-          <div id="myEventsGrid" class="my-events-grid">
-            <p class="my-events-empty">Loading...</p>
+
+          <div class="profile-card">
+            <div class="profile-card__header">
+              <h2>Hosted Events</h2>
+              <p class="profile-card__sub">Events you are hosting, including attendee details.</p>
+            </div>
+            <div id="hostedEventsList" class="mini-events-list">
+              <p class="my-events-empty">Loading your hosted events...</p>
+            </div>
           </div>
         </div>
 
         <div class="profile-card">
           <div class="profile-card__header">
-            <h2>⬡ My Profile</h2>
-            <p class="profile-card__sub">Fill in your details so other hive members can know you better.</p>
+            <h2>My Profile</h2>
+            <p class="profile-card__sub">Your details, college information, and interests.</p>
           </div>
 
           <form id="profileForm">
-
-            <!-- Name -->
             <div class="form-row">
               <div class="form-group">
-                <label>First Name *</label>
-                <input type="text" name="firstName" id="firstName" placeholder="e.g. Rahul" required>
+                <label for="firstName">First Name</label>
+                <input type="text" name="firstName" id="firstName" required>
               </div>
               <div class="form-group">
-                <label>Last Name *</label>
-                <input type="text" name="lastName" id="lastName" placeholder="e.g. Sharma" required>
+                <label for="lastName">Last Name</label>
+                <input type="text" name="lastName" id="lastName" required>
               </div>
             </div>
 
-            <!-- Bio -->
             <div class="form-group">
-              <label>Bio</label>
-              <textarea name="bio" id="bio" rows="3" placeholder="Tell us about yourself — what drives you, what you're building, or your hot take on pineapple pizza."></textarea>
+              <label for="bio">Bio</label>
+              <textarea name="bio" id="bio" rows="3"></textarea>
             </div>
 
-            <!-- Department & Section -->
             <div class="form-row">
               <div class="form-group">
-                <label>Department *</label>
-                <select name="department" id="department" required>
-                  <option value="">Select Department</option>
-                  <option value="CSE">CSE</option>
-                  <option value="CSE-AIML">CSE — AIML</option>
-                  <option value="CSE-DS">CSE — Data Science</option>
-                  <option value="CSE-CS">CSE — Cyber Security</option>
-                  <option value="CSE-IOT">CSE — IoT</option>
-                  <option value="IT">IT</option>
-                  <option value="ECE">ECE</option>
-                  <option value="EEE">EEE</option>
-                  <option value="MECH">Mechanical</option>
-                  <option value="CIVIL">Civil</option>
-                  <option value="BIOTECH">Biotech</option>
-                  <option value="BBA">BBA</option>
-                  <option value="MBA">MBA</option>
-                </select>
+                <label for="department">Department</label>
+                <input type="text" name="department" id="department">
               </div>
               <div class="form-group">
-                <label>Section</label>
-                <input type="text" name="section" id="section" placeholder="e.g. A, B, C">
+                <label for="section">Section</label>
+                <input type="text" name="section" id="section">
               </div>
             </div>
 
-            <!-- Year & Reg Number -->
             <div class="form-row">
               <div class="form-group">
-                <label>Year *</label>
-                <select name="year" id="year" required>
-                  <option value="">Select Year</option>
-                  <option value="1">1st Year</option>
-                  <option value="2">2nd Year</option>
-                  <option value="3">3rd Year</option>
-                  <option value="4">4th Year</option>
-                  <option value="5">5th Year</option>
-                </select>
+                <label for="year">Year</label>
+                <input type="number" name="year" id="year" min="1" max="6">
               </div>
               <div class="form-group">
-                <label>Registration Number</label>
-                <input type="text" name="regNumber" id="regNumber" placeholder="e.g. RA2211003010XXX">
+                <label for="regNumber">Registration Number</label>
+                <input type="text" name="regNumber" id="regNumber">
               </div>
             </div>
 
-            <!-- Interests (multi-select tags) -->
             <div class="form-group">
               <label>Interested In</label>
               <div class="interest-tags" id="interestTags">
-                <button type="button" class="interest-tag" data-value="sports">🏀 Sports</button>
-                <button type="button" class="interest-tag" data-value="esports">🎮 Esports</button>
-                <button type="button" class="interest-tag" data-value="dance">💃 Dance</button>
-                <button type="button" class="interest-tag" data-value="art">🎨 Art</button>
-                <button type="button" class="interest-tag" data-value="literature">📚 Literature</button>
-                <button type="button" class="interest-tag" data-value="music">🎵 Music</button>
-                <button type="button" class="interest-tag" data-value="tech">💻 Tech</button>
-                <button type="button" class="interest-tag" data-value="photography">📷 Photography</button>
-                <button type="button" class="interest-tag" data-value="film">🎬 Film</button>
-                <button type="button" class="interest-tag" data-value="debate">🗣️ Debate</button>
-                <button type="button" class="interest-tag" data-value="volunteering">🤝 Volunteering</button>
-                <button type="button" class="interest-tag" data-value="startups">🚀 Startups</button>
+                <button type="button" class="interest-tag" data-value="sports">Sports</button>
+                <button type="button" class="interest-tag" data-value="esports">Esports</button>
+                <button type="button" class="interest-tag" data-value="dance">Dance</button>
+                <button type="button" class="interest-tag" data-value="art">Art</button>
+                <button type="button" class="interest-tag" data-value="literature">Literature</button>
+                <button type="button" class="interest-tag" data-value="music">Music</button>
+                <button type="button" class="interest-tag" data-value="tech">Tech</button>
+                <button type="button" class="interest-tag" data-value="management">Management</button>
               </div>
             </div>
 
-            <!-- Social Links -->
             <div class="form-group">
-              <label>LinkedIn (optional)</label>
-              <input type="url" name="linkedin" id="linkedin" placeholder="https://linkedin.com/in/yourprofile">
+              <label for="linkedin">LinkedIn</label>
+              <input type="url" name="linkedin" id="linkedin">
             </div>
 
             <div class="form-group">
-              <label>Instagram (optional)</label>
-              <input type="text" name="instagram" id="instagram" placeholder="@yourhandle">
+              <label for="instagram">Instagram</label>
+              <input type="text" name="instagram" id="instagram">
             </div>
 
-            <!-- Save -->
             <div class="profile-actions">
-              <button type="submit" class="profile-save-btn">Save Profile 🍯</button>
+              <button type="submit" class="profile-save-btn">Save Profile</button>
               <span class="save-status" id="saveStatus"></span>
             </div>
-
           </form>
         </div>
       </div>
-
-    </div><!-- /profile-layout -->
-
+    </div>
   </div>
 </section>
 
 <script>
-/* ---- Notification toggle ---- */
-function toggleNotifications() {
-  const dd = document.getElementById('notificationDropdown');
-  dd.classList.toggle('show');
-}
-document.addEventListener('click', e => {
-  const dd = document.getElementById('notificationDropdown');
-  if (!e.target.closest('.notification-container') && dd) dd.classList.remove('show');
-});
-
-/* ---- Avatar upload ---- */
-const avatarInput   = document.getElementById('avatarInput');
+const avatarInput = document.getElementById('avatarInput');
 const avatarPreview = document.getElementById('avatarPreview');
 const avatarPlaceholder = document.getElementById('avatarPlaceholder');
-const avatarEditBtn = document.getElementById('avatarEditBtn');
 
-avatarEditBtn.addEventListener('click', () => avatarInput.click());
-document.getElementById('avatarWrapper').addEventListener('click', e => {
-  if (e.target === avatarEditBtn) return;
-  avatarInput.click();
-});
+function toggleNotifications() {
+  document.getElementById('notificationDropdown').classList.toggle('show');
+}
+
+document.getElementById('avatarEditBtn').addEventListener('click', () => avatarInput.click());
+document.getElementById('avatarWrapper').addEventListener('click', () => avatarInput.click());
 
 avatarInput.addEventListener('change', () => {
   const file = avatarInput.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
-    avatarPreview.src = e.target.result;
+  reader.onload = event => {
+    avatarPreview.src = event.target.result;
     avatarPreview.style.display = 'block';
     avatarPlaceholder.style.display = 'none';
   };
   reader.readAsDataURL(file);
 });
 
-/* ---- Interest tags toggle ---- */
-document.querySelectorAll('.interest-tag').forEach(btn => {
-  btn.addEventListener('click', () => btn.classList.toggle('selected'));
+document.querySelectorAll('.interest-tag').forEach(button => {
+  button.addEventListener('click', () => button.classList.toggle('selected'));
 });
+
+function formatDate(value) {
+  return new Date(value).toLocaleString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
 
 function getSelectedInterests() {
-  return [...document.querySelectorAll('.interest-tag.selected')].map(b => b.dataset.value);
+  return [...document.querySelectorAll('.interest-tag.selected')].map(button => button.dataset.value);
 }
 
-/* ---- Load profile from server ---- */
-async function loadProfile() {
-  try {
-    const res = await fetch('/api/profile');
-    if (res.status === 401) {
-      window.location.href = 'authentication.html';
-      return;
-    }
-    if (!res.ok) return;
-    const data = await res.json();
-
-    if (data.firstName) document.getElementById('firstName').value = data.firstName;
-    if (data.lastName)  document.getElementById('lastName').value  = data.lastName;
-    if (data.bio)       document.getElementById('bio').value       = data.bio;
-    if (data.department) document.getElementById('department').value = data.department;
-    if (data.section)   document.getElementById('section').value   = data.section;
-    if (data.year)      document.getElementById('year').value      = data.year;
-    if (data.regNumber) document.getElementById('regNumber').value = data.regNumber;
-    if (data.linkedin)  document.getElementById('linkedin').value  = data.linkedin;
-    if (data.instagram) document.getElementById('instagram').value = data.instagram;
-
-    // interests
-    if (data.interests && Array.isArray(data.interests)) {
-      data.interests.forEach(val => {
-        const tag = document.querySelector(`.interest-tag[data-value="${val}"]`);
-        if (tag) tag.classList.add('selected');
-      });
-    }
-
-    // avatar
-    if (data.avatar) {
-      avatarPreview.src = data.avatar;
-      avatarPreview.style.display = 'block';
-      avatarPlaceholder.style.display = 'none';
-    }
-
-    // display name
-    const full = [data.firstName, data.lastName].filter(Boolean).join(' ');
-    if (full) document.getElementById('displayName').textContent = full;
-    if (data.email) document.getElementById('displayEmail').textContent = data.email;
-
-  } catch (err) {
-    console.error('Load profile error:', err);
-  }
-}
-
-/* ---- Save profile to server ---- */
-document.getElementById('profileForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  const status = document.getElementById('saveStatus');
-  status.textContent = 'Saving…';
-  status.className = 'save-status';
-
-  const formData = new FormData();
-  formData.append('firstName',  document.getElementById('firstName').value.trim());
-  formData.append('lastName',   document.getElementById('lastName').value.trim());
-  formData.append('bio',        document.getElementById('bio').value.trim());
-  formData.append('department', document.getElementById('department').value);
-  formData.append('section',    document.getElementById('section').value.trim());
-  formData.append('year',       document.getElementById('year').value);
-  formData.append('regNumber',  document.getElementById('regNumber').value.trim());
-  formData.append('linkedin',   document.getElementById('linkedin').value.trim());
-  formData.append('instagram',  document.getElementById('instagram').value.trim());
-  formData.append('interests',  JSON.stringify(getSelectedInterests()));
-
-  if (avatarInput.files[0]) {
-    formData.append('avatar', avatarInput.files[0]);
-  }
+async function loadNotifications() {
+  const dropdown = document.getElementById('notificationDropdown');
+  const header = dropdown.querySelector('.notification-header');
+  dropdown.innerHTML = '';
+  dropdown.appendChild(header);
 
   try {
-    const res = await fetch('/api/profile', { method: 'POST', body: formData });
-
-    if (res.status === 401) {
-      window.location.href = 'authentication.html';
-      return;
-    }
-
-    let data;
-    const contentType = res.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      data = await res.json();
-    } else {
-      data = { error: 'Unexpected server response' };
-    }
-
-    if (res.ok) {
-      status.textContent = '✓ Profile saved!';
-      status.classList.add('success');
-      const full = [document.getElementById('firstName').value, document.getElementById('lastName').value].filter(Boolean).join(' ');
-      if (full) document.getElementById('displayName').textContent = full;
-      loadProfileStats();
-    } else {
-      status.textContent = data.error || 'Failed to save';
-      status.classList.add('error');
-    }
-  } catch (err) {
-    console.error('Profile save error:', err);
-    status.textContent = 'Could not reach server. Is it running?';
-    status.classList.add('error');
-  }
-
-  setTimeout(() => { status.textContent = ''; status.className = 'save-status'; }, 3000);
-});
-
-/* ---- Init ---- */
-loadProfile();
-loadProfileStats();
-loadMyEvents();
-checkSession();
-
-/* ---- Check session & show logout ---- */
-async function checkSession() {
-  try {
-    const res = await fetch('/api/me');
-    if (res.ok) {
-      document.getElementById('logoutBtn').style.display = 'block';
-    }
-  } catch {}
-}
-
-/* ---- Logout ---- */
-async function logoutUser() {
-  try {
-    await fetch('/api/logout', { method: 'POST' });
-    window.location.href = 'index.html';
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-/* ---- Load profile stats from backend ---- */
-async function loadProfileStats() {
-  try {
-    const res = await fetch('/api/profile/stats');
-    if (!res.ok) return;
-    const data = await res.json();
-    document.getElementById('eventsPosted').textContent = data.eventsPosted || 0;
-    document.getElementById('eventsJoined').textContent = data.eventsJoined || 0;
-  } catch (err) {
-    console.error('Stats error:', err);
-  }
-}
-
-/* ---- Load my posted events ---- */
-async function loadMyEvents() {
-  const grid = document.getElementById('myEventsGrid');
-  try {
-    const res = await fetch('/api/my-events');
-    if (res.status === 401) {
-      window.location.href = 'authentication.html';
-      return;
-    }
+    const res = await fetch('/api/notifications');
     if (!res.ok) throw new Error('Failed');
-    const events = await res.json();
-
-    if (events.length === 0) {
-      grid.innerHTML = '<p class="my-events-empty">You haven\'t posted any events yet. <a href="register.html">Create one →</a></p>';
+    const items = await res.json();
+    if (!items.length) {
+      dropdown.innerHTML += '<div class="notification-item"><div class="notification-title">No new notifications</div></div>';
       return;
     }
-
-    grid.innerHTML = events.map(ev => {
-      const d = new Date(ev.time);
-      const dateStr = d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
-      const timeStr = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-      const isPast = d < new Date();
-      return `
-        <div class="my-event-item ${isPast ? 'my-event-item--past' : ''}">
-          <div class="my-event-img">
-            <img src="${ev.image || 'https://via.placeholder.com/80x80?text=No+Img'}" alt="${ev.name}">
-          </div>
-          <div class="my-event-details">
-            <div class="my-event-name">${ev.name}</div>
-            <div class="my-event-meta">
-              <span>📅 ${dateStr}</span>
-              <span>🕐 ${timeStr}</span>
-              <span>₹${ev.price}</span>
-            </div>
-            <div class="my-event-reg-count"
-                 onclick="toggleStudents(${ev.id}, this)"
-                 style="cursor:pointer;"
-                 title="Click to see registered students">
-              👥 ${ev.registration_count} registered ▾
-            </div>
-            <div class="students-panel" id="students-${ev.id}" style="display:none;"></div>
-          </div>
-          <button class="my-event-delete-btn" onclick="deleteMyEvent(${ev.id})" title="Delete event">🗑️</button>
-        </div>`;
-    }).join('');
-  } catch (err) {
-    console.error('My events error:', err);
-    grid.innerHTML = '<p class="my-events-empty">Could not load your events.</p>';
+    dropdown.innerHTML += items.map(item => `
+      <div class="notification-item">
+        <div class="notification-title">${item.title}</div>
+        <div class="notification-time">${formatDate(item.time)}</div>
+      </div>
+    `).join('');
+  } catch (_) {
+    dropdown.innerHTML += '<div class="notification-item"><div class="notification-title">Notifications unavailable</div></div>';
   }
 }
 
-/* ---- Delete my event ---- */
-async function deleteMyEvent(eventId) {
-  if (!confirm('Are you sure you want to delete this event?')) return;
-  try {
-    const res = await fetch(`/api/events/${eventId}`, { method: 'DELETE' });
-    if (res.ok) {
-      loadMyEvents();
-      loadProfileStats();
-    } else {
-      const data = await res.json();
-      alert(data.error || 'Failed to delete');
-    }
-  } catch (err) {
-    console.error(err);
-    alert('Network error');
+async function bootstrap() {
+  const sessionRes = await fetch('/api/me');
+  if (!sessionRes.ok) {
+    const profileNavLink = document.getElementById('profileNavLink');
+    profileNavLink.textContent = 'Sign In';
+    profileNavLink.href = 'authentication.html';
+    window.location.href = 'authentication.html';
+    return;
   }
+  const session = await sessionRes.json();
+  const profileNavLink = document.getElementById('profileNavLink');
+  profileNavLink.textContent = 'My Profile';
+  profileNavLink.href = session.isAdmin ? 'admin.html' : 'profile.html';
+  if (session.isAdmin) {
+    window.location.href = 'admin.html';
+    return;
+  }
+  document.getElementById('displayEmail').textContent = session.email;
 }
 
-/* ---- Toggle registered students list ---- */
-async function toggleStudents(eventId, trigger) {
+async function loadProfile() {
+  const res = await fetch('/api/profile');
+  if (!res.ok) return;
+  const profile = await res.json();
+
+  document.getElementById('firstName').value = profile.firstName || '';
+  document.getElementById('lastName').value = profile.lastName || '';
+  document.getElementById('bio').value = profile.bio || '';
+  document.getElementById('department').value = profile.department || '';
+  document.getElementById('section').value = profile.section || '';
+  document.getElementById('year').value = profile.year || '';
+  document.getElementById('regNumber').value = profile.regNumber || '';
+  document.getElementById('linkedin').value = profile.linkedin || '';
+  document.getElementById('instagram').value = profile.instagram || '';
+
+  if (profile.avatar) {
+    avatarPreview.src = profile.avatar;
+    avatarPreview.style.display = 'block';
+    avatarPlaceholder.style.display = 'none';
+  }
+
+  (profile.interests || []).forEach(value => {
+    const tag = document.querySelector(`.interest-tag[data-value="${value}"]`);
+    if (tag) tag.classList.add('selected');
+  });
+
+  const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(' ');
+  if (fullName) document.getElementById('displayName').textContent = fullName;
+  if (profile.email) document.getElementById('displayEmail').textContent = profile.email;
+}
+
+async function loadStats() {
+  const res = await fetch('/api/profile/stats');
+  if (!res.ok) return;
+  const data = await res.json();
+  document.getElementById('eventsPosted').textContent = data.eventsPosted || 0;
+  document.getElementById('eventsJoined').textContent = data.eventsJoined || 0;
+}
+
+async function loadRegisteredEvents() {
+  const container = document.getElementById('registeredEventsList');
+  const res = await fetch('/api/my-registrations');
+  if (!res.ok) {
+    container.innerHTML = '<p class="my-events-empty">Could not load your registrations.</p>';
+    return;
+  }
+
+  const data = await res.json();
+  if (!data.events.length) {
+    container.innerHTML = '<p class="my-events-empty">No registrations yet.</p>';
+    return;
+  }
+
+  const now = new Date();
+  container.innerHTML = data.events.map(event => `
+    <div class="mini-event">
+      <h4>${event.name}</h4>
+      <p>${new Date(event.time) < now ? 'Past event' : 'Upcoming event'} • ${formatDate(event.time)}</p>
+      <p>${event.category} • Registered on ${formatDate(event.registered_at)}</p>
+      <div class="host-actions">
+        <button type="button" class="profile-save-btn" onclick="openEventRoom(${event.id})">Open announcements</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function loadHostedEvents() {
+  const container = document.getElementById('hostedEventsList');
+  const res = await fetch('/api/my-events');
+  if (!res.ok) {
+    container.innerHTML = '<p class="my-events-empty">Could not load your hosted events.</p>';
+    return;
+  }
+
+  const events = await res.json();
+  if (!events.length) {
+    container.innerHTML = '<p class="my-events-empty">You are not hosting any events yet. <a href="register.html">Host one now</a>.</p>';
+    return;
+  }
+
+  container.innerHTML = events.map(event => `
+    <div class="mini-event">
+      <h4>${event.name}</h4>
+      <p>${formatDate(event.time)} • ${event.category} • ${event.registration_count} registered</p>
+      <div class="host-actions">
+        <button type="button" class="profile-save-btn" onclick="openEventRoom(${event.id})">Announcements</button>
+        <button type="button" class="profile-save-btn" onclick="toggleStudents(${event.id})">View attendees</button>
+        <button type="button" class="profile-logout-btn" onclick="deleteHostedEvent(${event.id})">Delete</button>
+      </div>
+      <div class="students-panel" id="students-${event.id}" style="display:none;"></div>
+    </div>
+  `).join('');
+}
+
+function openEventRoom(eventId) {
+  window.location.href = `announcement.html?eventId=${eventId}`;
+}
+
+async function toggleStudents(eventId) {
   const panel = document.getElementById(`students-${eventId}`);
-  if (!panel) return;
-
-  // If already visible, just hide it
-  if (panel.style.display !== 'none') {
+  if (panel.style.display === 'block') {
     panel.style.display = 'none';
     return;
   }
 
   panel.style.display = 'block';
-  panel.innerHTML = '<p class="students-loading">Loading...</p>';
+  panel.innerHTML = 'Loading attendees...';
 
-  try {
-    const res = await fetch(`/api/events/${eventId}/students`);
-    if (!res.ok) {
-      const data = await res.json();
-      panel.innerHTML = `<p class="students-loading">${data.error || 'Failed to load'}</p>`;
-      return;
-    }
+  const res = await fetch(`/api/events/${eventId}/students`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    panel.innerHTML = data.error || 'Could not load attendees.';
+    return;
+  }
 
-    const data = await res.json();
+  if (!data.students.length) {
+    panel.innerHTML = 'No students registered yet.';
+    return;
+  }
 
-    if (data.students.length === 0) {
-      panel.innerHTML = '<p class="students-loading">No students registered yet.</p>';
-      return;
-    }
-
-    let html = `<table class="students-table">
+  panel.innerHTML = `
+    <table class="students-table">
       <thead>
         <tr>
           <th>Name</th>
           <th>Email</th>
-          <th>Dept</th>
+          <th>Department</th>
           <th>Year</th>
           <th>Section</th>
           <th>Reg No.</th>
-          <th>Registered</th>
         </tr>
       </thead>
-      <tbody>`;
-
-    data.students.forEach(s => {
-      const name = [s.firstName, s.lastName].filter(Boolean).join(' ') || '—';
-      const regDate = s.registeredAt ? new Date(s.registeredAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }) : '—';
-      html += `
-        <tr>
-          <td>${name}</td>
-          <td>${s.email}</td>
-          <td>${s.department || '—'}</td>
-          <td>${s.year || '—'}</td>
-          <td>${s.section || '—'}</td>
-          <td>${s.regNumber || '—'}</td>
-          <td>${regDate}</td>
-        </tr>`;
-    });
-
-    html += '</tbody></table>';
-    panel.innerHTML = html;
-
-  } catch (err) {
-    console.error('Students fetch error:', err);
-    panel.innerHTML = '<p class="students-loading">Could not load students.</p>';
-  }
+      <tbody>
+        ${data.students.map(student => `
+          <tr>
+            <td>${[student.firstName, student.lastName].filter(Boolean).join(' ') || '-'}</td>
+            <td>${student.email}</td>
+            <td>${student.department || '-'}</td>
+            <td>${student.year || '-'}</td>
+            <td>${student.section || '-'}</td>
+            <td>${student.regNumber || '-'}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
 }
+
+async function deleteHostedEvent(eventId) {
+  if (!confirm('Delete this event?')) return;
+  const res = await fetch(`/api/events/${eventId}`, { method: 'DELETE' });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    alert(data.error || 'Could not delete event.');
+    return;
+  }
+  loadHostedEvents();
+  loadStats();
+}
+
+document.getElementById('profileForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const formData = new FormData();
+  formData.append('firstName', document.getElementById('firstName').value.trim());
+  formData.append('lastName', document.getElementById('lastName').value.trim());
+  formData.append('bio', document.getElementById('bio').value.trim());
+  formData.append('department', document.getElementById('department').value.trim());
+  formData.append('section', document.getElementById('section').value.trim());
+  formData.append('year', document.getElementById('year').value.trim());
+  formData.append('regNumber', document.getElementById('regNumber').value.trim());
+  formData.append('linkedin', document.getElementById('linkedin').value.trim());
+  formData.append('instagram', document.getElementById('instagram').value.trim());
+  formData.append('interests', JSON.stringify(getSelectedInterests()));
+
+  if (avatarInput.files[0]) {
+    formData.append('avatar', avatarInput.files[0]);
+  }
+
+  const saveStatus = document.getElementById('saveStatus');
+  saveStatus.textContent = 'Saving...';
+
+  const res = await fetch('/api/profile', { method: 'POST', body: formData });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    saveStatus.textContent = data.error || 'Could not save profile.';
+    return;
+  }
+
+  saveStatus.textContent = 'Profile saved.';
+  document.getElementById('displayName').textContent =
+    [document.getElementById('firstName').value.trim(), document.getElementById('lastName').value.trim()]
+      .filter(Boolean)
+      .join(' ');
+  loadStats();
+  loadRegisteredEvents();
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await fetch('/api/logout', { method: 'POST' });
+  window.location.href = 'index.html';
+});
+
+document.addEventListener('click', event => {
+  const dropdown = document.getElementById('notificationDropdown');
+  if (!event.target.closest('.notification-container')) dropdown.classList.remove('show');
+});
+
+(async function initPage() {
+  await bootstrap();
+  await Promise.all([
+    loadProfile(),
+    loadStats(),
+    loadRegisteredEvents(),
+    loadHostedEvents(),
+    loadNotifications(),
+  ]);
+})();
 </script>
 </body>
 </html>

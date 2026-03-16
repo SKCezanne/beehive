@@ -1,11 +1,11 @@
 const router = require('express').Router();
 const { getPool }     = require('../db');
-const { requireAuth } = require('../middleware/auth');
+const { requireUserAuth } = require('../middleware/auth');
 
 /* ====================================================
    GET /api/cart — registered events for current user
    ==================================================== */
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireUserAuth, async (req, res) => {
   try {
     const pool = await getPool();
     const [rows] = await pool.query(
@@ -40,7 +40,7 @@ router.get('/', requireAuth, async (req, res) => {
 /* ====================================================
    POST /api/cart/:eventId — register for an event
    ==================================================== */
-router.post('/:eventId', requireAuth, async (req, res) => {
+router.post('/:eventId', requireUserAuth, async (req, res) => {
   try {
     const pool  = await getPool();
     const email = req.session.user.email;
@@ -79,7 +79,7 @@ router.post('/:eventId', requireAuth, async (req, res) => {
 /* ====================================================
    DELETE /api/cart/:eventId — unregister from event
    ==================================================== */
-router.delete('/:eventId', requireAuth, async (req, res) => {
+router.delete('/:eventId', requireUserAuth, async (req, res) => {
   try {
     const pool = await getPool();
     await pool.query(

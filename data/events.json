@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "id": 12,
+    "name": "werwwerw",
+    "description": "ewrewrw",
+    "category": "sports",
+    "price": 200,
+    "time": "2026-09-14T02:30",
+    "image": null,
+    "registration_link": "https://docs.google.com/forms/d/e/1FAIpQLSehZXsMEoy6atKV51NZVEEvu4qp2Y01_hRRBsT47vP-9veH8g/viewform?usp=publish-editor"
+  },
+  {
+    "id": 13,
+    "name": "football",
+    "description": "suiiii",
+    "category": "sports",
+    "price": 50,
+    "time": "2026-09-14T02:30",
+    "image": "/uploads/1773509511312-477124121.jpg",
+    "registration_link": "https://docs.google.com/forms/d/e/1FAIpQLSehZXsMEoy6atKV51NZVEEvu4qp2Y01_hRRBsT47vP-9veH8g/viewform?usp=publish-editor"
+  }
+]

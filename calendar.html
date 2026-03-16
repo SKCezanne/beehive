@@ -15,9 +15,10 @@
         <div class="nav-container">
             <a href="index.html" class="logo">⬡ Event Hive</a>
             <div class="nav-right">
+                
                 <a href="calendar.html" class="nav-link nav-link--active">📅 Calendar</a>
                 <a href="cart.html" class="nav-link">🛒 My Events</a>
-                <a href="profile.html" class="nav-link">👤 Profile</a>
+                <a href="authentication.html" class="nav-link" id="profileNavLink">Sign In</a>
                 <div class="notification-container">
                     <button class="notification-btn" onclick="toggleNotifications()">🔔</button>
                     <div class="notification-dropdown" id="notificationDropdown">
@@ -103,6 +104,17 @@ let currentDate = new Date();
 let allEvents = [];
 let selectedDay = null;
 let myRegisteredIds = [];
+
+async function updateTopbarProfileLink() {
+    try {
+        const res = await fetch(`${API_BASE}/api/me`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const profileNavLink = document.getElementById('profileNavLink');
+        profileNavLink.textContent = 'My Profile';
+        profileNavLink.href = data.isAdmin ? 'admin.html' : 'profile.html';
+    } catch {}
+}
 
 // ── Load everything ──
 async function loadCalendar() {
@@ -193,8 +205,12 @@ function renderCalendar() {
             year === today.getFullYear();
 
         cell.className = 'calendar-day';
+        cell.dataset.day = String(day);
         if (evts.length > 0) cell.classList.add('event-day');
         if (isToday)         cell.classList.add('calendar-day--today');
+        if (selectedDay && selectedDay.year === year && selectedDay.month === month && selectedDay.day === day) {
+            cell.classList.add('calendar-day--selected');
+        }
 
         // Badge showing number of events
         cell.innerHTML = evts.length > 0
@@ -222,6 +238,7 @@ function showDayDetail(year, month, day, events, clickedCell) {
     // highlight selected
     document.querySelectorAll('.calendar-day--selected').forEach(el => el.classList.remove('calendar-day--selected'));
     clickedCell.classList.add('calendar-day--selected');
+    selectedDay = { year, month, day };
 
     const title = document.getElementById('dayDetailTitle');
     const body  = document.getElementById('dayDetailBody');
@@ -264,12 +281,17 @@ function showDayDetail(year, month, day, events, clickedCell) {
 function goToEvent(eventTime) {
     const eventDate = new Date(eventTime);
     currentDate = new Date(eventDate.getFullYear(), eventDate.getMonth(), 1);
+    selectedDay = {
+        year: eventDate.getFullYear(),
+        month: eventDate.getMonth(),
+        day: eventDate.getDate(),
+    };
     renderCalendar();
 
     setTimeout(() => {
         const days = document.querySelectorAll('.calendar-day');
         days.forEach(day => {
-            if (parseInt(day.textContent) === eventDate.getDate() && day.classList.contains('event-day')) {
+            if (Number(day.dataset.day) === eventDate.getDate() && day.classList.contains('event-day')) {
                 day.classList.add('highlight-day');
                 day.click(); // open detail panel
                 setTimeout(() => day.classList.remove('highlight-day'), 2000);
@@ -408,6 +430,7 @@ async function calendarRegister(eventId, btn) {
     }
 }
 
+updateTopbarProfileLink();
 loadCalendar();
 </script>
 

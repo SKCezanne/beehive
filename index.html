@@ -15,9 +15,10 @@
         <div class="nav-container">
             <a href="index.html" class="logo">⬡ Event Hive</a>
             <div class="nav-right">
+            
                 <a href="calendar.html" class="nav-link">📅 Calendar</a>
                 <a href="cart.html" class="nav-link">🛒 My Events</a>
-                <a href="profile.html" class="nav-link">👤 Profile</a>
+                <a href="authentication.html" class="nav-link" id="profileNavLink">Sign In</a>
                 <div class="notification-container">
                     <button class="notification-btn" onclick="toggleNotifications()">🔔</button>
                     <div class="notification-dropdown" id="notificationDropdown">
@@ -26,7 +27,11 @@
                 </div>
             </div>
         </div>
-    </nav>
+</nav>
+
+    <button id="floatingLogoutBtn" class="floating-logout-btn" type="button" style="display:none;">
+        Logout
+    </button>
 
     <!-- Hero Section -->
     <section class="hero-section">
@@ -53,7 +58,7 @@
                     <div class="cta-icon">🎯</div>
                     <h3>Host Your Event</h3>
                     <p>Got something exciting? Register your event in under 2 minutes and reach hundreds of students.</p>
-                    <a href="register.html" class="cta-link">Host Now →</a>
+                    <a href="register.html" class="cta-link">Register Now →</a>
                 </div>
                 <div class="cta-card">
                     <div class="cta-icon">📅</div>
@@ -110,15 +115,49 @@
     <script>
         const API_BASE = window.location.origin;
 
-        // Redirect to sign in if not logged in
-        async function ensureSignedIn() {
+        async function bootstrapSession() {
             try {
                 const res = await fetch(`${API_BASE}/api/me`);
-                if (res.status === 401) {
-                    window.location.href = 'authentication.html';
+                if (!res.ok) return;
+                const data = await res.json();
+                const profileNavLink = document.getElementById('profileNavLink');
+                profileNavLink.textContent = 'My Profile';
+                profileNavLink.href = data.isAdmin ? 'admin.html' : 'profile.html';
+                if (!data.isAdmin) {
+                    document.getElementById('floatingLogoutBtn').style.display = 'inline-flex';
                 }
-            } catch (e) {
-                // ignore
+                if (data.isAdmin) {
+                    window.location.href = 'admin.html';
+                }
+            } catch (_) {
+                // Ignore initial session check failures.
+            }
+        }
+
+        async function loadNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            const header = dropdown.querySelector('.notification-header');
+            dropdown.innerHTML = '';
+            dropdown.appendChild(header);
+
+            try {
+                const res = await fetch(`${API_BASE}/api/notifications`);
+                if (!res.ok) throw new Error('Failed');
+                const notifications = await res.json();
+
+                if (!notifications.length) {
+                    dropdown.innerHTML += '<div class="notification-item"><div class="notification-title">No new notifications</div></div>';
+                    return;
+                }
+
+                dropdown.innerHTML += notifications.map(item => `
+                    <div class="notification-item">
+                        <div class="notification-title">${item.title}</div>
+                        <div class="notification-time">${formatDateTime(item.time)}</div>
+                    </div>
+                `).join('');
+            } catch (_) {
+                dropdown.innerHTML += '<div class="notification-item"><div class="notification-title">Notifications unavailable</div></div>';
             }
         }
 
@@ -130,7 +169,6 @@
                 if (!res.ok) throw new Error('Failed to load events');
                 const events = await res.json();
                 displayEvents(events);
-                updateNotifications(events);
 
             } catch (err) {
                 grid.innerHTML = '<p class="events-error">Could not load events. Make sure the backend is running at ' + API_BASE + '</p>';
@@ -187,69 +225,6 @@
             // Mark already-registered events
             markRegistered();
         }
-        function updateNotifications(events) {
-    const dropdown = document.getElementById('notificationDropdown');
-    const header = dropdown.querySelector('.notification-header');
-
-    // Clear old items except header
-    dropdown.innerHTML = '';
-    dropdown.appendChild(header);
-
-    const notifications = [];
-
-    const now = new Date();
-    const tomorrow = new Date();
-    tomorrow.setDate(now.getDate() + 1);
-
-    const seenEventIds = JSON.parse(localStorage.getItem('seenEvents') || '[]');
-
-    events.forEach(event => {
-        const eventDate = new Date(event.time);
-
-        // New event notification
-        if (!seenEventIds.includes(event.id)) {
-            notifications.push({
-                title: `New Event: ${event.name}`,
-                time: 'Just added'
-            });
-            seenEventIds.push(event.id);
-        }
-
-        // Reminder for tomorrow
-        if (
-            eventDate.getDate() === tomorrow.getDate() &&
-            eventDate.getMonth() === tomorrow.getMonth() &&
-            eventDate.getFullYear() === tomorrow.getFullYear()
-        ) {
-            notifications.push({
-                title: `Reminder: ${event.name} is tomorrow`,
-                time: eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            });
-        }
-    });
-
-    localStorage.setItem('seenEvents', JSON.stringify(seenEventIds));
-
-    if (notifications.length === 0) {
-        const empty = document.createElement('div');
-        empty.className = 'notification-item';
-        empty.innerHTML = `<div class="notification-title">No new notifications</div>`;
-        dropdown.appendChild(empty);
-        return;
-    }
-
-    notifications.forEach(n => {
-        const item = document.createElement('div');
-        item.className = 'notification-item';
-        item.innerHTML = `
-            <div class="notification-title">${n.title}</div>
-            <div class="notification-time">${n.time}</div>
-        `;
-        dropdown.appendChild(item);
-    });
-}
-
-
         function formatDateTime(dateString) {
             const date = new Date(dateString);
             return date.toLocaleDateString('en-IN', { 
@@ -287,8 +262,10 @@
             }
         });
 
-        // Load events on page load (redirect to sign-in if not authenticated)
-        ensureSignedIn().then(loadEvents);
+        // Load events on page load
+        bootstrapSession();
+        loadNotifications();
+        loadEvents();
 
         // ===== Cart Registration =====
         async function registerForEvent(eventId, btn) {
@@ -326,6 +303,15 @@
                 });
             } catch (e) { /* not logged in, ignore */ }
         }
+
+        document.getElementById('floatingLogoutBtn').addEventListener('click', async () => {
+            try {
+                await fetch(`${API_BASE}/api/logout`, { method: 'POST' });
+            } catch (_) {
+                // ignore logout errors and still refresh state
+            }
+            window.location.href = 'index.html';
+        });
 
         // ===== ReactBits Antigravity-style Particle Background =====
         (function initAntigravity() {

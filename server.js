@@ -15,6 +15,8 @@ const profileRoutes  = require('./routes/profile');
 const cartRoutes     = require('./routes/cart');
 const calendarRoutes = require('./routes/calendar');
 const userRoutes     = require('./routes/user');
+const adminRoutes    = require('./routes/admin');
+const announcementRoutes = require('./routes/announcements');
 
 const app = express();
 
@@ -41,9 +43,11 @@ app.use('/api/profile',  profileRoutes);   // /api/profile, /api/profile/stats
 app.use('/api/cart',     cartRoutes);      // /api/cart, /api/cart/:eventId
 app.use('/api/calendar', calendarRoutes);  // /api/calendar/:year/:month
 app.use('/api',          userRoutes);      // /api/my-events, /api/my-registrations
+app.use('/api/admin',    adminRoutes);     // /api/admin/*
+app.use('/api/announcements', announcementRoutes);
 
 /* ================ FRONTEND ================ */
-app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'authentication.html')));
+app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 /* ================ ERROR HANDLER ================ */
 app.use(errorHandler);

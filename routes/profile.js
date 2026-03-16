@@ -1,12 +1,12 @@
 const router = require('express').Router();
 const { getPool }     = require('../db');
-const { requireAuth } = require('../middleware/auth');
+const { requireUserAuth } = require('../middleware/auth');
 const { upload }      = require('../middleware/upload');
 
 /* ====================================================
    GET /api/profile — fetch current user's profile
    ==================================================== */
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireUserAuth, async (req, res) => {
   try {
     const pool = await getPool();
     const [rows] = await pool.query('SELECT * FROM profiles WHERE email = ?', [req.session.user.email]);
@@ -37,7 +37,7 @@ router.get('/', requireAuth, async (req, res) => {
 /* ====================================================
    POST /api/profile — create / update profile
    ==================================================== */
-router.post('/', requireAuth, upload.single('avatar'), async (req, res) => {
+router.post('/', requireUserAuth, upload.single('avatar'), async (req, res) => {
   try {
     const { firstName, lastName, bio, department, section, year, regNumber, linkedin, instagram, interests } = req.body;
     const email = req.session.user.email;
@@ -93,7 +93,7 @@ router.post('/', requireAuth, upload.single('avatar'), async (req, res) => {
 /* ====================================================
    GET /api/profile/stats — events posted & joined
    ==================================================== */
-router.get('/stats', requireAuth, async (req, res) => {
+router.get('/stats', requireUserAuth, async (req, res) => {
   try {
     const pool  = await getPool();
     const email = req.session.user.email;
